@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBS Katman Yönetim Sistemi - Çalışır Versiyon</title>
+    
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    
+    <style>
+        /* CSS Variables - Tema Sistemi */
+        :root {
+            --primary-color: #2196f3;
+            --secondary-color: #f5f5f5;
+            --accent-color: #ff9800;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #6c757d;
+            --text-inverse: #ffffff;
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --bg-dark: #495057;
+            --bg-darker: #343a40;
+            
+            --border-color: #e0e0e0;
+            --border-light: #dee2e6;
+            --border-dark: #6c757d;
+            
+            --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --shadow-heavy: 0 4px 16px rgba(0, 0, 0, 0.2);
+            
+            --radius-small: 4px;
+            --radius-medium: 6px;
+            --radius-large: 8px;
+            --radius-xl: 12px;
+            
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 20px;
+            --spacing-xxl: 24px;
+            
+            --font-size-xs: 10px;
+            --font-size-sm: 11px;
+            --font-size-base: 12px;
+            --font-size-md: 14px;
+            --font-size-lg: 16px;
+            --font-size-xl: 18px;
+            
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.2s ease;
+            --transition-slow: 0.3s ease;
+        }
+
+        /* Dark Theme Variables */
+        [data-theme="dark"] {
+            --bg-primary: #2d3748;
+            --bg-secondary: #1a202c;
+            --bg-tertiary: #4a5568;
+            --text-primary: #ffffff;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --border-light: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color var(--transition-base), 
+                        border-color var(--transition-base), 
+                        box-shadow var(--transition-base),
+                        transform var(--transition-base),
+                        color var(--transition-base);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sol Panel - Katman Yönetimi */
+        .layer-panel {
+            width: 380px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            resize: horizontal;
+            min-width: 250px;
+            max-width: 600px;
+        }
+
+        .panel-header {
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-darker));
+            color: var(--text-inverse);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .panel-header h2 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+
+        .btn {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: none;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            font-size: var(--font-size-base);
+            transition: all var(--transition-base);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: var(--text-inverse);
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            color: var(--text-inverse);
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .layer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        /* Layer Groups */
+        .layer-group {
+            margin-bottom: var(--spacing-sm);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-medium);
+            background: var(--bg-primary);
+            transition: all var(--transition-base);
+        }
+
+        .layer-group:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
+        }
+
+        .group-header {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: linear-gradient(135deg, var(--bg-tertiary), #eeeeee);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+            transition: all var(--transition-base);
+        }
+
+        .group-header:hover {
+            background: linear-gradient(135deg, #e8f4fd, #d6eaf8);
+        }
+
+        .group-icon {
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .group-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .group-name {
+            flex: 1;
+        }
+
+        .group-count {
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            background: rgba(108, 117, 125, 0.15);
+            color: var(--text-muted);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            border: 1px solid rgba(108, 117, 125, 0.2);
+        }
+
+        .group-items {
+            padding: var(--spacing-xs) 1px var(--spacing-xs) var(--spacing-xs);
+            background: #fafbfc;
+            border-left: 3px solid var(--bg-tertiary);
+        }
+
+        .group-items.collapsed {
+            display: none;
+        }
+
+        /* Layer Items */
+        .layer-item {
+            display: flex;
+            align-items: flex-start;
+            padding: var(--spacing-sm) var(--spacing-xs);
+            border-bottom: 1px solid #f1f3f5;
+            background: var(--bg-primary);
+            transition: all var(--transition-base);
+            border-radius: var(--radius-small);
+            margin: 0px 0.5px 0px var(--spacing-lg);
+            min-height: 40px;
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .layer-item:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+            box-shadow: 0 1px 3px rgba(33, 150, 243, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .layer-item.selected {
+            background: rgba(13, 110, 253, 0.1) !important;
+            border-left: 3px solid #0d6efd;
+        }
+
+        .layer-selectable-area {
+            display: flex;
+            align-items: flex-start;
+            flex: 1;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+            gap: 4px;
+        }
+
+        .layer-selectable-area:hover {
+            background: rgba(0, 123, 255, 0.1);
+        }
+
+        .layer-visibility {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .layer-name {
+            flex: 1;
+            font-size: var(--font-size-base);
+            line-height: 1.4;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+            max-width: calc(100% - 100px);
+            padding-top: 1px;
+        }
+
+        .layer-style-mode-indicator {
+            margin-top: 2px;
+            margin-left: 4px;
+            margin-right: 4px;
+            font-size: var(--font-size-base);
+            padding: 2px 6px;
+            border-radius: var(--radius-small);
+            font-weight: 500;
+            min-width: 16px;
+            text-align: center;
+            opacity: 0.7;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            flex-shrink: 0;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .layer-style-mode-indicator:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .layer-style-mode-indicator.default-mode {
+            background: var(--text-muted);
+            color: white;
+            border: 1px solid var(--text-muted);
+        }
+
+        .layer-style-mode-indicator.custom-mode {
+            background: var(--success-color);
+            color: white;
+            border: 1px solid var(--success-color);
+        }
+
+        .layer-actions {
+            display: flex;
+            gap: 3px;
+            flex-shrink: 0;
+            align-items: flex-start;
+            margin-top: 2px;
+        }
+
+        .layer-action-btn {
+            background: none;
+            border: none;
+            padding: 2px 4px;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-radius: 3px;
+            font-size: 11px;
+            transition: all var(--transition-base);
+        }
+
+        .layer-action-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--bg-darker);
+        }
+
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            width: 100%;
+            flex: 1;
+            z-index: 1;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-light);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: var(--font-size-base);
+            color: var(--text-secondary);
+            min-height: 40px;
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xl);
+        }
+
+        .coordinate-display {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .coordinate-item {
+            background: var(--bg-primary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-small);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .scale-display {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .scale-text {
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .scale-text:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        /* Map Tools */
+        .map-tools-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tool-group {
+            background: var(--bg-primary);
+            border-radius: var(--radius-small);
+            box-shadow: var(--shadow-medium);
+            overflow: hidden;
+        }
+
+        .tool-group-title {
+            background: var(--bg-secondary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-light);
+            text-align: center;
+        }
+
+        .tool-buttons {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tool-btn {
+            background: var(--bg-primary);
+            border: none;
+            border-bottom: 1px solid var(--border-light);
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            font-size: var(--font-size-md);
+            color: var(--text-primary);
+            transition: all var(--transition-base);
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .tool-btn:last-child {
+            border-bottom: none;
+        }
+
+        .tool-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--primary-color);
+        }
+
+        .tool-btn.active {
+            background: var(--primary-color);
+            color: var(--text-inverse);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .toast {
+            background: var(--success-color);
+            color: var(--text-inverse);
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--radius-small);
+            box-shadow: var(--shadow-medium);
+            min-width: 250px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform: translateX(400px);
+            transition: transform var(--transition-slow);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: var(--danger-color);
+        }
+
+        .toast.warning {
+            background: var(--warning-color);
+            color: var(--text-primary);
+        }
+
+        .toast.info {
+            background: var(--info-color);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: var(--font-size-lg);
+            margin-left: var(--spacing-md);
+            transition: opacity var(--transition-base);
+        }
+
+        .toast-close:hover {
+            opacity: 0.7;
+        }
+
+        /* Create Buttons */
+        .create-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 4px;
+        }
+
+        .create-group-btn, .create-layer-btn {
+            padding: var(--spacing-sm) var(--spacing-sm);
+            border: none;
+            border-radius: var(--radius-medium);
+            cursor: pointer;
+            color: white;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            text-align: center;
+            transition: all var(--transition-base);
+        }
+
+        .create-group-btn {
+            background: linear-gradient(135deg, var(--text-muted), #5a6268);
+        }
+
+        .create-layer-btn {
+            background: linear-gradient(135deg, var(--text-muted), var(--bg-dark));
+        }
+
+        .create-group-btn:hover, .create-layer-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .layer-panel {
+                width: 100%;
+                height: 40%;
+                resize: vertical;
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+            }
+            
+            .map-container {
+                height: 60%;
+            }
+            
+            .map-tools-container {
+                top: 5px;
+                right: 5px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                max-width: calc(100% - 10px);
+            }
+            
+            .tool-buttons {
+                flex-direction: row;
+            }
+            
+            .tool-btn {
+                padding: var(--spacing-xs);
+                min-width: 32px;
+                border-right: 1px solid var(--border-light);
+                border-bottom: none;
+            }
+            
+            .tool-btn:last-child {
+                border-right: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sol Panel - Katman Yönetimi -->
+        <div class="layer-panel">
+            <!-- Panel Header -->
+            <div class="panel-header">
+                <h2>🗺️ Katmanlar</h2>
+                <div class="header-actions">
+                    <button class="btn btn-success" onclick="showToast('Filtre açılıyor', 'info')" title="Katman Filtresi">
+                        🔍 Filtre
+                    </button>
+                    <button class="btn btn-info" onclick="toggleTheme()" title="Tema Değiştir" id="themeToggle">
+                        🌙
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hızlı Oluşturma Butonları -->
+            <div class="create-buttons">
+                <button class="create-group-btn" onclick="showToast('Grup oluşturma özelliği', 'info')">
+                    📂 Grup Oluştur
+                </button>
+                <button class="create-layer-btn" onclick="showToast('Katman oluşturma özelliği', 'info')">
+                    🗂️ Katman Oluştur
+                </button>
+                <button class="create-group-btn" onclick="expandAllGroups()" style="background: var(--info-color);">
+                    📂 Tümünü Aç
+                </button>
+                <button class="create-group-btn" onclick="collapseAllGroups()">
+                    📁 Tümünü Kapat
+                </button>
+            </div>
+
+            <!-- Katman Listesi -->
+            <div class="layer-list" id="layerList">
+                <!-- Temel Harita Grubu -->
+                <div class="layer-group" data-group-id="group-1">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">🗺️ Temel Haritalar</span>
+                        <span class="group-count">2</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" data-layer-id="osm-layer" data-layer-type="raster" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('osm-layer')">
+                                <span class="layer-name">OpenStreetMap</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" onclick="showLayerProperties(this)">📋</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="showToast('Stil ayarları', 'info')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="satellite-layer" data-layer-type="raster" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" onclick="event.stopPropagation(); toggleLayerVisibility('satellite-layer')">
+                                <span class="layer-name">Uydu Görüntüsü</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" onclick="showLayerProperties(this)">📋</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="showToast('Stil ayarları', 'info')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vektör Veriler Grubu -->
+                <div class="layer-group" data-group-id="group-2">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">📐 Vektör Veriler</span>
+                        <span class="group-count">3</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" data-layer-id="il-sinirlari" data-layer-type="polygon" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('il-sinirlari')">
+                                <span class="layer-name">İl Sınırları</span>
+                                <span class="layer-style-mode-indicator custom-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">C</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle" onclick="showToast('Düzenleme modu', 'info')">✏️</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="showToast('Stil ayarları', 'info')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="yol-agi" data-layer-type="line" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('yol-agi')">
+                                <span class="layer-name">Yol Ağı</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle" onclick="showToast('Düzenleme modu', 'info')">✏️</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="showToast('Stil ayarları', 'info')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="sehir-merkezleri" data-layer-type="point" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('sehir-merkezleri')">
+                                <span class="layer-name">Şehir Merkezleri</span>
+                                <span class="layer-style-mode-indicator custom-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">C</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle" onclick="showToast('Düzenleme modu', 'info')">✏️</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="showToast('Stil ayarları', 'info')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Çizimler Grubu -->
+                <div class="layer-group" data-group-id="group-3">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">✏️ Çizimler</span>
+                        <span class="group-count">0</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="empty-group-message" style="padding: 12px; text-align: center; color: var(--text-muted); font-style: italic;">
+                            Henüz çizim bulunmuyor. Harita araçlarını kullanarak çizim yapabilirsiniz.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Harita Alanı -->
+        <div class="map-container">
+            <!-- Harita -->
+            <div id="map"></div>
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <div class="coordinate-display">
+                        <div class="coordinate-item" id="coordinateX">X: 32.8597</div>
+                        <div class="coordinate-item" id="coordinateY">Y: 39.9334</div>
+                    </div>
+                </div>
+                <div class="status-right">
+                    <div class="scale-display">
+                        <span class="scale-text" id="scaleText" title="Dinamik ölçek">1:436,071</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Harita Araçları -->
+    <div class="map-tools-container">
+        <div class="tool-group">
+            <div class="tool-group-title">ÖLÇÜM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="distanceBtn" onclick="startMeasurement('distance')" title="Mesafe Ölç">📏</button>
+                <button class="tool-btn" id="areaBtn" onclick="startMeasurement('area')" title="Alan Ölç">🔲</button>
+                <button class="tool-btn" onclick="clearMeasurements()" title="Ölçümleri Temizle">🗑️</button>
+                <button class="tool-btn" onclick="showToast('Ölçüm ayarları', 'info')" title="Ölçüm Ayarları">⚙️</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">ÇİZİM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="pointBtn" onclick="startDrawing('marker')" title="Nokta Çiz">📍</button>
+                <button class="tool-btn" id="lineBtn" onclick="startDrawing('polyline')" title="Çizgi Çiz">📝</button>
+                <button class="tool-btn" id="polygonBtn" onclick="startDrawing('polygon')" title="Poligon Çiz">🔷</button>
+                <button class="tool-btn" id="rectangleBtn" onclick="startDrawing('rectangle')" title="Dikdörtgen Çiz">⬛</button>
+                <button class="tool-btn" id="circleBtn" onclick="startDrawing('circle')" title="Daire Çiz">⭕</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">GÖRÜNÜM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" onclick="zoomToExtent()" title="Tümüne Zoom">🎯</button>
+                <button class="tool-btn" onclick="toggleFullscreen()" title="Tam Ekran">📺</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    
+    <script>
+        // Global Variables
+        let map;
+        let drawnItems = L.featureGroup();
+        let currentTool = null;
+        let currentTheme = 'light';
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            console.log('🚀 CBS Katman Yönetim Sistemi başlatılıyor...');
+            
+            initMap();
+            initializeTheme();
+            
+            setTimeout(() => {
+                showToast('CBS Katman Yönetim Sistemi hazır! 🗺️', 'success');
+            }, 1000);
+        }
+
+        // Map Initialization
+        function initMap() {
+            map = L.map('map').setView([39.9334, 32.8597], 6);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            map.addLayer(drawnItems);
+
+            // Setup coordinate display
+            map.on('mousemove', function(e) {
+                document.getElementById('coordinateX').textContent = `X: ${e.latlng.lng.toFixed(6)}`;
+                document.getElementById('coordinateY').textContent = `Y: ${e.latlng.lat.toFixed(6)}`;
+            });
+
+            // Setup scale display
+            map.on('zoomend moveend', function() {
+                const zoom = map.getZoom();
+                const scale = Math.round(Math.pow(2, 18 - zoom) * 1000);
+                document.getElementById('scaleText').textContent = `1:${scale.toLocaleString()}`;
+            });
+
+            console.log('✅ Harita başarıyla yüklendi');
+        }
+
+        // Theme System
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('cbs-theme') || 'light';
+            setTheme(savedTheme);
+        }
+
+        function toggleTheme() {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+                themeToggle.title = theme === 'light' ? 'Karanlık Tema' : 'Aydınlık Tema';
+            }
+            
+            localStorage.setItem('cbs-theme', theme);
+            showToast(`${theme === 'light' ? 'Aydınlık' : 'Karanlık'} tema aktif`, 'info');
+        }
+
+        // Group Functions
+        function toggleGroup(element) {
+            const groupItems = element.closest('.group-header').nextElementSibling;
+            const icon = element;
+            
+            if (groupItems.classList.contains('collapsed')) {
+                groupItems.classList.remove('collapsed');
+                icon.textContent = '▼';
+            } else {
+                groupItems.classList.add('collapsed');
+                icon.textContent = '▶';
+            }
+        }
+
+        function expandAllGroups() {
+            document.querySelectorAll('.group-items').forEach(items => {
+                items.classList.remove('collapsed');
+            });
+            document.querySelectorAll('.group-icon').forEach(icon => {
+                icon.textContent = '▼';
+            });
+            showToast('Tüm gruplar açıldı', 'info');
+        }
+
+        function collapseAllGroups() {
+            document.querySelectorAll('.group-items').forEach(items => {
+                items.classList.add('collapsed');
+            });
+            document.querySelectorAll('.group-icon').forEach(icon => {
+                icon.textContent = '▶';
+            });
+            showToast('Tüm gruplar kapatıldı', 'info');
+        }
+
+        function selectGroup(element) {
+            document.querySelectorAll('.layer-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelectorAll('.group-header').forEach(header => {
+                header.classList.remove('selected');
+            });
+            
+            element.closest('.group-header').classList.add('selected');
+            showToast('Grup seçildi', 'info');
+        }
+
+        function selectLayer(element) {
+            document.querySelectorAll('.layer-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelectorAll('.group-header').forEach(header => {
+                header.classList.remove('selected');
+            });
+            
+            element.closest('.layer-item').classList.add('selected');
+            
+            const layerId = element.closest('.layer-item').dataset.layerId;
+            showToast(`Katman seçildi: ${layerId}`, 'info');
+        }
+
+        function toggleAllLayersInGroup(event, checkbox) {
+            event.stopPropagation();
+            const groupItems = checkbox.closest('.layer-group').querySelector('.group-items');
+            const layerCheckboxes = groupItems.querySelectorAll('.layer-visibility');
+            
+            layerCheckboxes.forEach(layerCheckbox => {
+                layerCheckbox.checked = checkbox.checked;
+            });
+            
+            const groupName = checkbox.closest('.layer-group').querySelector('.group-name').textContent;
+            showToast(`${groupName} grubundaki katmanlar ${checkbox.checked ? 'açıldı' : 'kapatıldı'}`, 'info');
+        }
+
+        // Layer Functions
+        function toggleLayerVisibility(layerId) {
+            const checkbox = document.querySelector(`[data-layer-id="${layerId}"] .layer-visibility`);
+            showToast(`${layerId} katmanı ${checkbox.checked ? 'gösterildi' : 'gizlendi'}`, 'info');
+        }
+
+        function toggleStyleMode(element) {
+            const isDefault = element.classList.contains('default-mode');
+            
+            if (isDefault) {
+                element.classList.remove('default-mode');
+                element.classList.add('custom-mode');
+                element.textContent = 'C';
+                showToast('Özel stil moduna geçildi', 'success');
+            } else {
+                element.classList.remove('custom-mode');
+                element.classList.add('default-mode');
+                element.textContent = 'D';
+                showToast('Varsayılan stil moduna geçildi', 'info');
+            }
+        }
+
+        function showLayerProperties(button) {
+            const layerItem = button.closest('.layer-item');
+            const layerId = layerItem.dataset.layerId;
+            const layerName = layerItem.querySelector('.layer-name').textContent;
+            
+            showToast(`${layerName} özellikleri gösteriliyor`, 'info');
+        }
+
+        function zoomToLayer(button) {
+            const layerItem = button.closest('.layer-item');
+            const layerId = layerItem.dataset.layerId;
+            const layerName = layerItem.querySelector('.layer-name').textContent;
+            
+            map.setView([39.9334, 32.8597], 8);
+            showToast(`${layerName} katmanına zoom yapıldı`, 'success');
+        }
+
+        function deleteLayer(button) {
+            const layerItem = button.closest('.layer-item');
+            const layerId = layerItem.dataset.layerId;
+            const layerName = layerItem.querySelector('.layer-name').textContent;
+            
+            if (confirm(`"${layerName}" katmanını silmek istediğinizden emin misiniz?`)) {
+                layerItem.remove();
+                showToast(`${layerName} katmanı silindi`, 'success');
+            }
+        }
+
+        // Drawing Tools
+        function startDrawing(type) {
+            clearActiveTools();
+            currentTool = type;
+            
+            const buttonIds = {
+                'marker': 'pointBtn',
+                'polyline': 'lineBtn',
+                'polygon': 'polygonBtn',
+                'rectangle': 'rectangleBtn',
+                'circle': 'circleBtn'
+            };
+            
+            if (buttonIds[type]) {
+                document.getElementById(buttonIds[type]).classList.add('active');
+                showToast(`${getDrawingTypeName(type)} çizimi başlatıldı`, 'info');
+                
+                enableDrawingMode(type);
+            }
+        }
+
+        function getDrawingTypeName(type) {
+            const names = {
+                'marker': 'Nokta',
+                'polyline': 'Çizgi',
+                'polygon': 'Poligon',
+                'rectangle': 'Dikdörtgen',
+                'circle': 'Daire'
+            };
+            return names[type] || type;
+        }
+
+        function enableDrawingMode(type) {
+            map.on('click', function(e) {
+                if (currentTool === type) {
+                    createDrawing(type, e.latlng);
+                }
+            });
+        }
+
+        function createDrawing(type, latlng) {
+            let layer;
+            
+            switch(type) {
+                case 'marker':
+                    layer = L.marker(latlng);
+                    break;
+                case 'circle':
+                    layer = L.circle(latlng, {radius: 1000});
+                    break;
+                default:
+                    showToast('Bu çizim tipi henüz desteklenmiyor', 'warning');
+                    return;
+            }
+            
+            if (layer) {
+                layer.addTo(drawnItems);
+                showToast(`${getDrawingTypeName(type)} eklendi`, 'success');
+                
+                updateDrawingsGroup();
+            }
+        }
+
+        function updateDrawingsGroup() {
+            const drawingsGroup = document.querySelector('[data-group-id="group-3"]');
+            const groupItems = drawingsGroup.querySelector('.group-items');
+            const groupCount = drawingsGroup.querySelector('.group-count');
+            
+            const count = drawnItems.getLayers().length;
+            groupCount.textContent = count;
+            
+            if (count > 0) {
+                const emptyMessage = groupItems.querySelector('.empty-group-message');
+                if (emptyMessage) {
+                    emptyMessage.remove();
+                }
+            }
+        }
+
+        // Measurement Tools
+        function startMeasurement(type) {
+            clearActiveTools();
+            currentTool = type;
+            
+            if (type === 'distance') {
+                document.getElementById('distanceBtn').classList.add('active');
+                showToast('Mesafe ölçümü başlatıldı - Harita üzerine tıklayın', 'info');
+            } else if (type === 'area') {
+                document.getElementById('areaBtn').classList.add('active');
+                showToast('Alan ölçümü başlatıldı - Harita üzerine tıklayın', 'info');
+            }
+        }
+
+        function clearMeasurements() {
+            drawnItems.clearLayers();
+            clearActiveTools();
+            updateDrawingsGroup();
+            showToast('Ölçümler ve çizimler temizlendi', 'success');
+        }
+
+        // View Functions
+        function zoomToExtent() {
+            map.setView([39.9334, 32.8597], 6);
+            showToast('Tüm katmanlara zoom yapıldı', 'success');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                showToast('Tam ekran modu açıldı', 'success');
+            } else {
+                document.exitFullscreen();
+                showToast('Tam ekran modu kapatıldı', 'info');
+            }
+        }
+
+        // Utility Functions
+        function clearActiveTools() {
+            currentTool = null;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            map.off('click');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button class="toast-close" onclick="closeToast(this)">&times;</button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    closeToast(toast.querySelector('.toast-close'));
+                }
+            }, 3000);
+        }
+
+        function closeToast(button) {
+            const toast = button.closest('.toast');
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }
+
+        // Event Listeners
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearActiveTools();
+            }
+        });
+
+        console.log('📋 CBS Katman Yönetim Sistemi v4.0 - Çalışır versiyon yüklendi');
+    </script>
+</body>
+</html>
