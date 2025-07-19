@@ -1,0 +1,397 @@
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* ===== DESKTOP & TABLET (768px+) ===== */
+@media (min-width: 768px) {
+    .desktop-only { display: block !important; }
+    .mobile-only { display: none !important; }
+}
+
+/* ===== TABLET (768px - 1024px) ===== */
+@media (max-width: 1024px) and (min-width: 768px) {
+    .layer-panel {
+        width: 320px;
+        min-width: 280px;
+        max-width: 450px;
+    }
+    
+    .map-tools-container {
+        top: 5px;
+        right: 5px;
+        gap: 3px;
+    }
+    
+    .tool-group-title {
+        font-size: var(--font-size-xs);
+        padding: 2px 6px;
+    }
+    
+    .tool-btn {
+        padding: 6px 8px;
+        font-size: var(--font-size-sm);
+        min-width: 35px;
+    }
+}
+
+/* ===== MOBILE (max-768px) ===== */
+@media (max-width: 768px) {
+    .desktop-only { display: none !important; }
+    .mobile-only { display: block !important; }
+    
+    body {
+        flex-direction: column;
+    }
+    
+    .main-container {
+        flex-direction: column;
+        height: 100vh;
+    }
+    
+    /* Mobile Layer Panel */
+    .layer-panel {
+        width: 100%;
+        height: 40%;
+        position: relative;
+        resize: vertical;
+        min-height: 200px;
+        max-height: 70%;
+        max-width: none;
+        order: 2;
+        border-right: none;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    .layer-panel::-webkit-resizer {
+        display: none;
+    }
+    
+    /* Mobile Map Container */
+    .map-container {
+        height: 60%;
+        order: 1;
+    }
+    
+    /* Mobile Panel Header */
+    .panel-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .panel-header h2 {
+        font-size: var(--font-size-md);
+    }
+    
+    /* Mobile Layer Items */
+    .layer-item {
+        padding: var(--spacing-sm);
+        margin: 0 2px 2px var(--spacing-sm);
+        min-height: 36px;
+    }
+    
+    .layer-name {
+        font-size: var(--font-size-sm);
+        max-width: calc(100% - 80px);
+    }
+    
+    .layer-action-btn {
+        padding: 3px 5px;
+        font-size: var(--font-size-xs);
+    }
+    
+    /* Mobile Groups */
+    .group-header {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .group-count {
+        font-size: var(--font-size-xs);
+        padding: 1px 4px;
+        min-width: 16px;
+    }
+    
+    /* Mobile Tools */
+    .map-tools-container {
+        top: 5px;
+        right: 5px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        max-width: calc(100% - 10px);
+    }
+    
+    .tool-group {
+        margin-bottom: 0;
+    }
+    
+    .tool-group-title {
+        display: none;
+    }
+    
+    .tool-buttons {
+        flex-direction: row;
+    }
+    
+    .tool-btn {
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-sm);
+        min-width: 32px;
+        border-right: 1px solid var(--border-light);
+        border-bottom: none;
+    }
+    
+    .tool-btn:last-child {
+        border-right: none;
+    }
+    
+    /* Mobile Status Bar */
+    .status-bar {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--font-size-sm);
+        min-height: 32px;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+    
+    .status-left, .status-right {
+        gap: var(--spacing-sm);
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .coordinate-item {
+        min-width: 100px;
+        padding: 2px 6px;
+        font-size: var(--font-size-xs);
+    }
+    
+    /* Mobile Create Buttons */
+    .create-buttons {
+        grid-template-columns: 1fr;
+        gap: 3px;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .create-group-btn, .create-layer-btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--font-size-xs);
+    }
+    
+    /* Mobile Legend */
+    .legend-container {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        min-width: auto;
+    }
+    
+    .legend-content {
+        max-height: 200px;
+        padding: var(--spacing-sm);
+    }
+    
+    .legend-item {
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .legend-symbol {
+        width: 16px;
+        height: 16px;
+        margin-right: var(--spacing-xs);
+    }
+    
+    .legend-label {
+        font-size: var(--font-size-sm);
+    }
+    
+    /* Mobile Toast */
+    .toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .toast {
+        min-width: auto;
+        width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-sm);
+    }
+    
+    /* Mobile Console Toggle */
+    .console-toggle-btn {
+        bottom: 80px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+    }
+}
+
+/* ===== SMALL MOBILE (max-480px) ===== */
+@media (max-width: 480px) {
+    .layer-panel {
+        min-height: 180px;
+        height: 45%;
+    }
+    
+    .map-container {
+        height: 55%;
+    }
+    
+    .panel-header h2 {
+        font-size: var(--font-size-base);
+    }
+    
+    .layer-item {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        min-height: 32px;
+        margin: 0 1px 1px var(--spacing-xs);
+    }
+    
+    .layer-name {
+        font-size: var(--font-size-xs);
+        max-width: calc(100% - 60px);
+    }
+    
+    .layer-actions {
+        gap: 1px;
+    }
+    
+    .layer-action-btn {
+        padding: 2px 3px;
+        font-size: 10px;
+    }
+    
+    .status-bar {
+        padding: 2px var(--spacing-xs);
+        min-height: 28px;
+    }
+    
+    .coordinate-item {
+        min-width: 80px;
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+    
+    .scale-text {
+        font-size: var(--font-size-xs);
+        padding: 1px 4px;
+    }
+    
+    .tool-btn {
+        min-width: 28px;
+        padding: 2px;
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* ===== LANDSCAPE MOBILE ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+    .layer-panel {
+        height: 50%;
+        min-height: 150px;
+        max-height: 60%;
+    }
+    
+    .map-container {
+        height: 50%;
+    }
+    
+    .status-bar {
+        flex-direction: row;
+        min-height: 24px;
+    }
+    
+    .status-left, .status-right {
+        flex-direction: row;
+        width: auto;
+    }
+}
+
+/* ===== HOVER STATES FOR TOUCH DEVICES ===== */
+@media (hover: none) and (pointer: coarse) {
+    .layer-item:hover,
+    .group-header:hover,
+    .tool-btn:hover,
+    .btn:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .layer-item:active,
+    .group-header:active,
+    .tool-btn:active,
+    .btn:active {
+        background-color: var(--bg-tertiary);
+        transform: scale(0.98);
+    }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    .group-icon {
+        transition: none;
+    }
+    
+    .toast {
+        transition: none;
+        transform: translateX(0);
+    }
+}
+
+/* ===== HIGH DPI DISPLAYS ===== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .legend-symbol,
+    .layer-style-mode-indicator,
+    .tool-btn {
+        border-width: 0.5px;
+    }
+    
+    .scale-bar {
+        border-width: 0.5px;
+    }
+}
+
+/* ===== DARK MODE PREFERENCES ===== */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --bg-primary: #2d3748;
+        --bg-secondary: #1a202c;
+        --bg-tertiary: #4a5568;
+        --text-primary: #ffffff;
+        --text-secondary: #e2e8f0;
+        --text-muted: #a0aec0;
+        --border-color: #4a5568;
+        --border-light: #2d3748;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .layer-panel,
+    .map-tools-container,
+    .toast-container,
+    .console-toggle-btn {
+        display: none !important;
+    }
+    
+    .map-container {
+        width: 100% !important;
+        height: 100vh !important;
+    }
+    
+    #map {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
+    .status-bar {
+        position: absolute;
+        bottom: 0;
+        background: white !important;
+        color: black !important;
+        border: 1px solid black;
+    }
+}

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBS Katman Yönetim Sistemi - Modüler v4.0</title>
+    
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="src/assets/styles/variables.css">
+    <link rel="stylesheet" href="src/assets/styles/base.css">
+    <link rel="stylesheet" href="src/assets/styles/components.css">
+    <link rel="stylesheet" href="src/assets/styles/modals.css">
+    <link rel="stylesheet" href="src/assets/styles/responsive.css">
+    
+    <meta name="description" content="Modern CBS Katman Yönetim Sistemi - Leaflet.js tabanlı profesyonel coğrafi bilgi sistemi">
+    <meta name="keywords" content="CBS, GIS, harita, katman yönetimi, leaflet, coğrafi bilgi sistemi">
+    <meta name="author" content="CBS Geliştirici">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232196f3'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z'/%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="main-container">
+        <!-- ===== SOL PANEL - KATMAN YÖNETİMİ ===== -->
+        <div class="layer-panel">
+            <!-- Panel Header -->
+            <div class="panel-header">
+                <h2>
+                    🗺️ Katmanlar
+                </h2>
+                <div class="header-actions">
+                    <button class="btn btn-sm btn-success" onclick="toggleLayerFilter()" title="Katman Filtresi">
+                        🔍
+                    </button>
+                    <button class="btn btn-sm" onclick="toggleTheme()" title="Tema Değiştir" id="themeToggle">
+                        🌙
+                    </button>
+                </div>
+            </div>
+
+            <!-- Arama ve Filtre Paneli -->
+            <div class="search-filter-panel" id="searchFilterPanel" style="display: none;">
+                <input type="text" id="layerSearch" placeholder="Katman ara..." onkeyup="applyFilter()">
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <button class="filter-type-btn active" data-type="all" onclick="setFilterType(this, 'all')">Tümü</button>
+                    <button class="filter-type-btn" data-type="point" onclick="setFilterType(this, 'point')">Nokta</button>
+                    <button class="filter-type-btn" data-type="line" onclick="setFilterType(this, 'line')">Çizgi</button>
+                    <button class="filter-type-btn" data-type="polygon" onclick="setFilterType(this, 'polygon')">Alan</button>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <button class="btn btn-sm" onclick="clearFilter()">Temizle</button>
+                    <button class="btn btn-sm btn-primary" onclick="applyFilter()">Filtrele</button>
+                </div>
+            </div>
+
+            <!-- Hızlı Oluşturma Butonları -->
+            <div class="create-buttons">
+                <button class="create-group-btn" onclick="showCreateGroupModal()">
+                    📂 Grup Oluştur
+                </button>
+                <button class="create-layer-btn" onclick="showCreateLayerModal()">
+                    🗂️ Katman Oluştur
+                </button>
+                <button class="create-group-btn" onclick="expandAllGroups()" style="background: var(--info-color);">
+                    📂 Tümünü Aç
+                </button>
+                <button class="create-group-btn" onclick="collapseAllGroups()">
+                    📁 Tümünü Kapat
+                </button>
+            </div>
+
+            <!-- Katman Listesi -->
+            <div class="layer-list" id="layerList">
+                <!-- Temel Harita Grubu -->
+                <div class="layer-group" data-group-id="group-1">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">🗺️ Temel Haritalar</span>
+                        <span class="group-count">2</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" data-layer-id="osm-layer" data-layer-type="raster" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('osm-layer')">
+                                <span class="layer-name">OpenStreetMap</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" onclick="showLayerProperties(this)">📋</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="openStyleModal('osm-layer')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="satellite-layer" data-layer-type="raster" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" onclick="event.stopPropagation(); toggleLayerVisibility('satellite-layer')">
+                                <span class="layer-name">Uydu Görüntüsü</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" onclick="showLayerProperties(this)">📋</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="openStyleModal('satellite-layer')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vektör Veriler Grubu -->
+                <div class="layer-group" data-group-id="group-2">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">📐 Vektör Veriler</span>
+                        <span class="group-count">3</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" data-layer-id="il-sinirlari" data-layer-type="polygon" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('il-sinirlari')">
+                                <span class="layer-name">İl Sınırları</span>
+                                <span class="layer-style-mode-indicator custom-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">C</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle" onclick="editLayer('il-sinirlari')">✏️</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="openStyleModal('il-sinirlari')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="yol-agi" data-layer-type="line" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('yol-agi')">
+                                <span class="layer-name">Yol Ağı</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle" onclick="editLayer('yol-agi')">✏️</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="openStyleModal('yol-agi')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="sehir-merkezleri" data-layer-type="point" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation(); toggleLayerVisibility('sehir-merkezleri')">
+                                <span class="layer-name">Şehir Merkezleri</span>
+                                <span class="layer-style-mode-indicator custom-mode" onclick="event.stopPropagation(); toggleStyleMode(this)" title="Stil Modu">C</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle" onclick="editLayer('sehir-merkezleri')">✏️</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="openStyleModal('sehir-merkezleri')">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Çizimler Grubu -->
+                <div class="layer-group" data-group-id="group-3">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">✏️ Çizimler</span>
+                        <span class="group-count">0</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="empty-group-message" style="padding: 12px; text-align: center; color: var(--text-muted); font-style: italic;">
+                            Henüz çizim bulunmuyor. Harita araçlarını kullanarak çizim yapabilirsiniz.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== HARITA ALANI ===== -->
+        <div class="map-container">
+            <!-- Harita -->
+            <div id="map"></div>
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <div class="coordinate-display">
+                        <div class="coordinate-item" id="coordinateX">X: 32.8597</div>
+                        <div class="coordinate-item" id="coordinateY">Y: 39.9334</div>
+                    </div>
+                    <div class="projection-selector desktop-only">
+                        <select id="projectionSelect" onchange="changeProjection()" title="Koordinat Sistemi">
+                            <option value="EPSG:4326">WGS84 (EPSG:4326)</option>
+                            <option value="EPSG:3857">Web Mercator (EPSG:3857)</option>
+                            <option value="EPSG:5254">ITRF96 UTM 35N (EPSG:5254)</option>
+                            <option value="EPSG:32635">WGS84 UTM 35N (EPSG:32635)</option>
+                            <option value="EPSG:32636">WGS84 UTM 36N (EPSG:32636)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="status-right">
+                    <div class="scale-display">
+                        <div class="scale-bar" id="scaleBar"></div>
+                        <span class="scale-text" id="scaleText" onclick="toggleScaleSelector(event)" 
+                              ondblclick="setDynamicScale()" 
+                              title="Tek tık: ölçek seç, Çift tık: dinamik mod">1:436,071</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HARITA ARAÇLARI ===== -->
+    <div class="map-tools-container">
+        <div class="tool-group">
+            <div class="tool-group-title">ÖLÇÜM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="distanceBtn" onclick="startMeasurement('distance')" title="Mesafe Ölç">📏</button>
+                <button class="tool-btn" id="areaBtn" onclick="startMeasurement('area')" title="Alan Ölç">🔲</button>
+                <button class="tool-btn" onclick="clearMeasurements()" title="Ölçümleri Temizle">🗑️</button>
+                <button class="tool-btn" onclick="openMeasurementSettings()" title="Ölçüm Ayarları">⚙️</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">ÇİZİM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="pointBtn" onclick="startDrawing('marker')" title="Nokta Çiz">📍</button>
+                <button class="tool-btn" id="lineBtn" onclick="startDrawing('polyline')" title="Çizgi Çiz">📝</button>
+                <button class="tool-btn" id="polygonBtn" onclick="startDrawing('polygon')" title="Poligon Çiz">🔷</button>
+                <button class="tool-btn" id="rectangleBtn" onclick="startDrawing('rectangle')" title="Dikdörtgen Çiz">⬛</button>
+                <button class="tool-btn" id="circleBtn" onclick="startDrawing('circle')" title="Daire Çiz">⭕</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">DÜZENLE</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="editBtn" onclick="toggleEditMode()" title="Düzenle">✏️</button>
+                <button class="tool-btn" id="deleteBtn" onclick="toggleDeleteMode()" title="Sil">🗑️</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">GÖRÜNÜM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="legendBtn" onclick="toggleLegend()" title="Lejant">📋</button>
+                <button class="tool-btn" id="zoomExtentBtn" onclick="zoomToExtent()" title="Tümüne Zoom">🎯</button>
+                <button class="tool-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Tam Ekran">📺</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SCALE SELECTOR ===== -->
+    <div class="scale-selector" id="scaleSelector">
+        <div class="scale-option" onclick="setFixedScale(1000)">1:1,000</div>
+        <div class="scale-option" onclick="setFixedScale(2500)">1:2,500</div>
+        <div class="scale-option" onclick="setFixedScale(5000)">1:5,000</div>
+        <div class="scale-option" onclick="setFixedScale(10000)">1:10,000</div>
+        <div class="scale-option" onclick="setFixedScale(25000)">1:25,000</div>
+        <div class="scale-option" onclick="setFixedScale(50000)">1:50,000</div>
+        <div class="scale-option" onclick="setFixedScale(100000)">1:100,000</div>
+        <div class="scale-option" onclick="setFixedScale(250000)">1:250,000</div>
+        <div class="scale-option" onclick="setFixedScale(500000)">1:500,000</div>
+        <div class="scale-option" onclick="setFixedScale(1000000)">1:1,000,000</div>
+        <div class="scale-option" onclick="setDynamicScale()" style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 8px;">
+            <strong>🔄 Dinamik Ölçek</strong>
+        </div>
+    </div>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===== LEGEND CONTAINER ===== -->
+    <div class="legend-container" id="legendContainer">
+        <div class="legend-header" id="legendHeader">
+            <span>📋 Lejant</span>
+            <div>
+                <button class="toast-close" id="legendCollapseBtn" onclick="toggleLegendContent()" title="Daralt/Genişlet">−</button>
+                <button class="toast-close" onclick="toggleLegend()" title="Kapat">&times;</button>
+            </div>
+        </div>
+        <div class="legend-content" id="legendContent">
+            <div class="legend-group">
+                <div class="legend-group-title">Temel Haritalar</div>
+                <div class="legend-item">
+                    <div class="legend-symbol" style="background: linear-gradient(45deg, #f0f0f0, #e0e0e0);"></div>
+                    <div class="legend-label">OpenStreetMap</div>
+                </div>
+            </div>
+            <div class="legend-group">
+                <div class="legend-group-title">Vektör Veriler</div>
+                <div class="legend-item">
+                    <div class="legend-symbol" style="background: rgba(33, 150, 243, 0.3); border: 2px solid #2196f3;"></div>
+                    <div class="legend-label">İl Sınırları</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-symbol" style="background: #ff9800; height: 4px; margin-top: 8px;"></div>
+                    <div class="legend-label">Yol Ağı</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-symbol" style="background: #f44336; border-radius: 50%;"></div>
+                    <div class="legend-label">Şehir Merkezleri</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <!-- Stil Ayarları Modal -->
+    <div id="styleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎨 Stil Ayarları</h3>
+                <button class="close-btn" onclick="closeStyleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-tabs">
+                    <button class="style-tab active" onclick="switchStyleTab('point')">Nokta</button>
+                    <button class="style-tab" onclick="switchStyleTab('line')">Çizgi</button>
+                    <button class="style-tab" onclick="switchStyleTab('polygon')">Alan</button>
+                </div>
+                
+                <!-- Point Styles -->
+                <div id="pointStyles" class="style-content">
+                    <div class="style-section">
+                        <h4>Nokta Stilleri</h4>
+                        <div class="control-row">
+                            <label>Renk:</label>
+                            <input type="color" id="pointColor" value="#2196f3">
+                        </div>
+                        <div class="control-row">
+                            <label>Boyut:</label>
+                            <input type="range" id="pointSize" min="1" max="20" value="8" oninput="updateRangeValue(this)">
+                            <span class="value-display">8</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Şekil:</label>
+                            <select id="pointShape">
+                                <option value="circle">Daire</option>
+                                <option value="square">Kare</option>
+                                <option value="triangle">Üçgen</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Line Styles -->
+                <div id="lineStyles" class="style-content" style="display: none;">
+                    <div class="style-section">
+                        <h4>Çizgi Stilleri</h4>
+                        <div class="control-row">
+                            <label>Renk:</label>
+                            <input type="color" id="lineColor" value="#ff9800">
+                        </div>
+                        <div class="control-row">
+                            <label>Kalınlık:</label>
+                            <input type="range" id="lineWidth" min="1" max="10" value="3" oninput="updateRangeValue(this)">
+                            <span class="value-display">3</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Stil:</label>
+                            <select id="lineStyle">
+                                <option value="solid">Düz</option>
+                                <option value="dashed">Kesikli</option>
+                                <option value="dotted">Noktalı</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Polygon Styles -->
+                <div id="polygonStyles" class="style-content" style="display: none;">
+                    <div class="style-section">
+                        <h4>Alan Stilleri</h4>
+                        <div class="control-row">
+                            <label>Dolgu Rengi:</label>
+                            <input type="color" id="polygonFillColor" value="#4caf50">
+                        </div>
+                        <div class="control-row">
+                            <label>Çerçeve Rengi:</label>
+                            <input type="color" id="polygonStrokeColor" value="#2e7d32">
+                        </div>
+                        <div class="control-row">
+                            <label>Şeffaflık:</label>
+                            <input type="range" id="polygonOpacity" min="0" max="100" value="50" name="opacity" oninput="updateRangeValue(this)">
+                            <span class="value-display">50%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeStyleModal()">İptal</button>
+                <button class="btn btn-primary" onclick="applyStyles()">Uygula</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grup Oluşturma Modal -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📂 Yeni Grup Oluştur</h3>
+                <button class="close-btn" onclick="closeCreateGroupModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="control-row">
+                    <label>Grup Adı:</label>
+                    <input type="text" id="groupName" placeholder="Grup adını girin...">
+                </div>
+                <div class="control-row">
+                    <label>Açıklama:</label>
+                    <textarea id="groupDesc" placeholder="Grup açıklaması..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateGroupModal()">İptal</button>
+                <button class="btn btn-primary" onclick="createGroup()">Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Katman Oluşturma Modal -->
+    <div id="createLayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🗂️ Yeni Katman Oluştur</h3>
+                <button class="close-btn" onclick="closeCreateLayerModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="control-row">
+                    <label>Katman Adı:</label>
+                    <input type="text" id="layerName" placeholder="Katman adını girin...">
+                </div>
+                <div class="control-row">
+                    <label>Katman Tipi:</label>
+                    <select id="layerType">
+                        <option value="point">Nokta</option>
+                        <option value="line">Çizgi</option>
+                        <option value="polygon">Alan</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <label>Grup:</label>
+                    <select id="layerGroup">
+                        <option value="group-1">Temel Haritalar</option>
+                        <option value="group-2">Vektör Veriler</option>
+                        <option value="group-3">Çizimler</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateLayerModal()">İptal</button>
+                <button class="btn btn-primary" onclick="createLayer()">Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.min.js"></script>
+    
+    <!-- Application JavaScript -->
+    <script src="src/main.js"></script>
+    
+    <!-- Console Toggle Button -->
+    <button class="console-toggle-btn" id="consoleToggleBtn" onclick="toggleMessageConsole()" title="Mesaj Konsolu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19,3H5C3.9,3 3,3.9 3,5V9H5V5H19V19H5V15H3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.9 20.1,3 19,3Z"/>
+            <path d="M10.08,15.58L11.5,17L16.5,12L11.5,7L10.08,8.41L12.67,11H3V13H12.67L10.08,15.58Z"/>
+        </svg>
+    </button>
+</body>
+</html>
