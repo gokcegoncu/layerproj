@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBS Katman Yönetim Sistemi - Temiz Version</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sol Panel - Katman Yönetimi */
+        .layer-panel {
+            width: 380px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            resize: horizontal;
+            min-width: 250px;
+            max-width: 600px;
+        }
+
+        /* Resize handle'ı daha belirgin yapalım */
+        .layer-panel::-webkit-resizer {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            border-radius: 2px;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #495057, #343a40);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .panel-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .add-layer-btn, .filter-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-btn {
+            background: #17a2b8;
+        }
+
+        .add-layer-btn:hover {
+            background: #218838;
+        }
+
+        .filter-btn:hover {
+            background: #138496;
+        }
+
+        .layer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        /* Katman Grubu */
+        .layer-group {
+            margin-bottom: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .group-header {
+            padding: 6px 10px;
+            background: #e9ecef;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .group-header:hover {
+            background: #dee2e6;
+        }
+
+        .group-checkbox {
+            margin-right: 5px;
+        }
+
+        .group-icon {
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .group-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .group-name {
+            flex: 1;
+        }
+
+        .group-count {
+            font-size: 10px;
+            font-weight: 400;
+            background: rgba(108, 117, 125, 0.15);
+            color: #6c757d;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            border: 1px solid rgba(108, 117, 125, 0.2);
+        }
+
+        .group-items {
+            padding: 3px 1px 3px 4px;
+            background: #fafbfc;
+            border-left: 3px solid #e9ecef;
+        }
+
+        .group-items.collapsed {
+            display: none;
+        }
+
+        /* Katman Elemanı */
+        .layer-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 8px 4px;
+            border-bottom: 1px solid #f1f3f5;
+            background: white;
+            transition: background-color 0.2s ease;
+            border-radius: 4px;
+            margin: 0px 0.5px 0px 16px;
+            min-height: 40px;
+            position: relative;
+        }
+
+        .layer-item:last-child {
+            border-bottom: none;
+        }
+
+        .layer-item + .layer-item {
+            margin-top: -1px;
+        }
+
+        .layer-item:hover {
+            background: #f8f9fa;
+        }
+
+        /* Katman seçilebilir alanları */
+        .layer-selectable-area {
+            display: flex;
+            align-items: flex-start;
+            flex: 1;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+            gap: 4px;
+        }
+
+        .layer-selectable-area:hover {
+            background: rgba(0, 123, 255, 0.1);
+        }
+
+        .layer-visibility {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .layer-name {
+            flex: 1;
+            font-size: 12px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+            max-width: calc(100% - 100px);
+            padding-top: 1px;
+        }
+
+        /* Katman stil modu göstergesi */
+        .layer-style-mode-indicator {
+            margin-top: 2px;
+            margin-left: 4px;
+            margin-right: 4px;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            min-width: 16px;
+            text-align: center;
+            opacity: 0.7;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            flex-shrink: 0;
+            color: #6c757d;
+        }
+
+        .layer-style-mode-indicator.default-mode {
+            background: #6c757d;
+            color: white;
+            border: 1px solid #6c757d;
+        }
+
+        .layer-style-mode-indicator.custom-mode {
+            background: #28a745;
+            color: white;
+            border: 1px solid #28a745;
+        }
+
+        .layer-actions {
+            display: flex;
+            gap: 3px;
+            flex-shrink: 0;
+            align-items: flex-start;
+            margin-top: 2px;
+        }
+
+        .layer-action-btn {
+            background: none;
+            border: none;
+            padding: 2px 4px;
+            cursor: pointer;
+            color: #6c757d;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .layer-action-btn:hover {
+            background: #e9ecef;
+            color: #343a40;
+        }
+
+        /* Harita Alanı */
+        .map-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            width: 100%;
+            flex: 1;
+            z-index: 1;
+        }
+
+        /* Koordinat ve Ölçek Status Bar */
+        .status-bar {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #495057;
+            min-height: 40px;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .coordinate-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .coordinate-item {
+            background: white;
+            padding: 4px 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .scale-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scale-bar {
+            width: 100px;
+            height: 4px;
+            background: #333;
+            position: relative;
+            border: 1px solid #000;
+        }
+
+        .scale-text {
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .scale-text:hover {
+            background-color: #e9ecef;
+        }
+
+        .scale-selector {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 150px;
+        }
+
+        .scale-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .scale-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .scale-option:last-child {
+            border-bottom: none;
+        }
+
+        /* Stil Ayarları Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            width: 480px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: move;
+        }
+
+        .modal-header {
+            padding: 15px;
+            background: #343a40;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .style-tabs {
+            display: flex;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+
+        .style-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            border-bottom: 3px solid transparent;
+        }
+
+        .style-tab.active {
+            border-bottom-color: #0d6efd;
+            color: #0d6efd;
+            font-weight: 500;
+        }
+
+        .style-section {
+            margin-bottom: 20px;
+        }
+
+        .style-section h4 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .control-row label {
+            flex: 0 0 140px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .control-row input[type="color"] {
+            width: 40px;
+            height: 25px;
+            padding: 0;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .control-row input[type="range"] {
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .control-row .value-display {
+            min-width: 40px;
+            text-align: right;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .control-row select {
+            flex: 1;
+            padding: 4px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .modal-footer {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0b5ed7;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5c636a;
+        }
+
+        /* Create buttons */
+        .create-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 4px;
+        }
+
+        .create-group-btn, .create-layer-btn {
+            padding: 6px 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            font-size: 10px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .create-group-btn {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+        }
+
+        .create-layer-btn {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+        .create-group-btn:hover, .create-layer-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Ölçüm Araçları */
+        .map-tools-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tool-group {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .tool-group-title {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .tool-buttons {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tool-btn {
+            background: white;
+            border: none;
+            border-bottom: 1px solid #dee2e6;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .tool-btn:last-child {
+            border-bottom: none;
+        }
+
+        .tool-btn:hover {
+            background: #f8f9fa;
+            color: #0078ff;
+        }
+
+        .tool-btn.active {
+            background: #0078ff;
+            color: white;
+        }
+
+        .tool-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Style content */
+        .style-content {
+            display: block;
+        }
+
+        .control-row textarea {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .control-row input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Search and Filter Panel */
+        .search-filter-panel {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .filter-type-btn {
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #495057;
+            transition: all 0.2s ease;
+        }
+
+        .filter-type-btn.active {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        .filter-type-btn:hover {
+            background: #dee2e6;
+        }
+
+        .filter-type-btn.active:hover {
+            background: #0b5ed7;
+        }
+
+        .btn-sm {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .btn-sm:hover {
+            background: #5a6268;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            min-width: 250px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        .toast.warning {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .toast.info {
+            background: #17a2b8;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        /* Layer Selection Highlights */
+        .layer-item.selected {
+            background: rgba(13, 110, 253, 0.1) !important;
+            border-left: 3px solid #0d6efd;
+        }
+
+        .group-header.selected {
+            background: rgba(13, 110, 253, 0.1) !important;
+        }
+
+        /* Clickable style indicators */
+        .layer-style-mode-indicator {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .layer-style-mode-indicator:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Legend Container */
+        .legend-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+            max-width: 300px;
+            z-index: 1000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: none;
+        }
+
+        .legend-header {
+            background: #343a40;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .legend-content {
+            padding: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .legend-symbol {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-label {
+            font-size: 13px;
+            color: #333;
+            flex: 1;
+        }
+
+        /* Modal Dragging */
+        .modal-content.draggable {
+            cursor: move;
+        }
+
+        .modal-content.dragging {
+            transform: translate(-50%, -50%) scale(1.02);
+        }
+
+        /* Drag and Drop */
+        .layer-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .layer-item.drag-over {
+            border-top: 2px solid #0d6efd;
+            background: rgba(13, 110, 253, 0.1);
+        }
+
+        .group-items.drag-over {
+            background: rgba(13, 110, 253, 0.1);
+            border: 2px dashed #0d6efd;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .layer-panel {
+                width: 100%;
+                height: 40%;
+                position: absolute;
+                bottom: 0;
+                z-index: 1000;
+                resize: vertical;
+                min-height: 200px;
+                max-height: 70%;
+            }
+            
+            .map-container {
+                height: 60%;
+            }
+            
+            .main-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Katman Paneli -->
+        <div class="layer-panel">
+            <div class="panel-header">
+                <h2>Katmanlar</h2>
+                <div class="header-actions">
+                    <button class="filter-btn" onclick="toggleLayerFilter()">
+                        🔍
+                    </button>
+                </div>
+            </div>
+
+            <!-- Arama ve Filtre Paneli -->
+            <div class="search-filter-panel" id="searchFilterPanel" style="display: none;">
+                <div style="padding: 10px; border-bottom: 1px solid #dee2e6;">
+                    <input type="text" id="layerSearch" placeholder="Katman ara..." style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <button class="filter-type-btn active" data-type="all">Tümü</button>
+                        <button class="filter-type-btn" data-type="point">Nokta</button>
+                        <button class="filter-type-btn" data-type="line">Çizgi</button>
+                        <button class="filter-type-btn" data-type="polygon">Alan</button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <button class="btn-sm" onclick="clearFilter()">Temizle</button>
+                        <button class="btn-sm" onclick="applyFilter()">Filtrele</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="create-buttons">
+                <button class="create-group-btn" onclick="showCreateGroupModal()">+ Grup Oluştur</button>
+                <button class="create-layer-btn" onclick="showCreateLayerModal()">+ Katman Oluştur</button>
+                <button class="create-group-btn" onclick="expandAllGroups()" style="background: #17a2b8;">📂 Tümünü Aç</button>
+                <button class="create-group-btn" onclick="collapseAllGroups()" style="background: #6c757d;">📁 Tümünü Kapat</button>
+            </div>
+
+            <div class="layer-list" id="layerList">
+                <!-- Temel Harita Grubu -->
+                <div class="layer-group" data-group-id="group-1">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-visibility-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">Temel Haritalar</span>
+                        <span class="group-count">2</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" data-layer-id="osm-layer" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation()">
+                                <span class="layer-name">OpenStreetMap</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" onclick="showLayerProperties(this)">📋</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="openStyleModal()">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="satellite-layer" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" onclick="event.stopPropagation()">
+                                <span class="layer-name">Uydu Görüntüsü</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" onclick="showLayerProperties(this)">📋</button>
+                                <button class="layer-action-btn" title="Stil Ayarları" onclick="openStyleModal()">🎨</button>
+                                <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">🔍</button>
+                                <button class="layer-action-btn" title="Sil" onclick="deleteLayer(this)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vektör Veriler Grubu -->
+                <div class="layer-group" data-group-id="group-2">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-visibility-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">Vektör Veriler</span>
+                        <span class="group-count">3</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" data-layer-id="il-sinirlari" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation()">
+                                <span class="layer-name">İl Sınırları</span>
+                                <span class="layer-style-mode-indicator custom-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">C</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle">✏️</button>
+                                <button class="layer-action-btn" title="Sil">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="yol-agi" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation()">
+                                <span class="layer-name">Yol Ağı</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle">✏️</button>
+                                <button class="layer-action-btn" title="Sil">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="sehir-merkezleri" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation()">
+                                <span class="layer-name">Şehir Merkezleri</span>
+                                <span class="layer-style-mode-indicator custom-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">C</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle">✏️</button>
+                                <button class="layer-action-btn" title="Sil">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nesne Verileri Grubu -->
+                <div class="layer-group" data-group-id="group-3">
+                    <div class="group-header">
+                        <input type="checkbox" class="group-visibility-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                        <span class="group-icon" onclick="toggleGroup(this)">▼</span>
+                        <span class="group-name" onclick="selectGroup(this)">Nesne Verileri</span>
+                        <span class="group-count">1</span>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" data-layer-id="binalar" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation()">
+                                <span class="layer-name">Binalar</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle">✏️</button>
+                                <button class="layer-action-btn" title="Sil">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="arazi-kullanimi" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" onclick="event.stopPropagation()">
+                                <span class="layer-name">Arazi Kullanımı</span>
+                                <span class="layer-style-mode-indicator default-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">D</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle">✏️</button>
+                                <button class="layer-action-btn" title="Sil">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="layer-item" data-layer-id="cim-alanlari" draggable="true">
+                            <div class="layer-selectable-area" onclick="selectLayer(this)">
+                                <input type="checkbox" class="layer-visibility" checked onclick="event.stopPropagation()">
+                                <span class="layer-name">Çim Alanları</span>
+                                <span class="layer-style-mode-indicator custom-mode" onclick="event.stopPropagation(); toggleStyleMode(this)">C</span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Düzenle">✏️</button>
+                                <button class="layer-action-btn" title="Sil">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Harita Alanı -->
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="status-bar">
+                <div class="status-left">
+                    <div class="coordinate-display">
+                        <div class="coordinate-item" id="mouseCoords">Lat: 39.9334, Lng: 32.8597</div>
+                    </div>
+                </div>
+                <div class="status-right">
+                    <div class="scale-display">
+                        <div class="scale-bar"></div>
+                        <span class="scale-text" id="scaleText" onclick="toggleScaleSelector(event)" ondblclick="switchToDynamicScale()" title="Tek tık: ölçek seç, Çift tık: dinamik moda geç">1:436,071</span>
+                        <div class="scale-selector" id="scaleSelector" style="display: none;">
+                            <div class="scale-option" onclick="setFixedScale(1000)">1:1,000</div>
+                            <div class="scale-option" onclick="setFixedScale(2500)">1:2,500</div>
+                            <div class="scale-option" onclick="setFixedScale(5000)">1:5,000</div>
+                            <div class="scale-option" onclick="setFixedScale(10000)">1:10,000</div>
+                            <div class="scale-option" onclick="setFixedScale(25000)">1:25,000</div>
+                            <div class="scale-option" onclick="setFixedScale(50000)">1:50,000</div>
+                            <div class="scale-option" onclick="setFixedScale(100000)">1:100,000</div>
+                            <div class="scale-option" onclick="setFixedScale(250000)">1:250,000</div>
+                            <div class="scale-option" onclick="setFixedScale(500000)">1:500,000</div>
+                            <div class="scale-option" onclick="setFixedScale(1000000)">1:1,000,000</div>
+                            <div class="scale-option" onclick="setDynamicScale()" style="border-top: 1px solid #dee2e6; margin-top: 4px; padding-top: 8px;">
+                                🔄 Dinamik Ölçek
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stil Ayarları Modal'ı -->
+    <div id="styleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Stil Ayarları</h3>
+                <button class="close-btn" onclick="closeStyleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-tabs">
+                    <button class="style-tab active" onclick="switchTab('point')">Nokta</button>
+                    <button class="style-tab" onclick="switchTab('line')">Çizgi</button>
+                    <button class="style-tab" onclick="switchTab('polygon')">Alan</button>
+                </div>
+                
+                <!-- Point Styles -->
+                <div id="pointStyles" class="style-content">
+                    <div class="style-section">
+                        <h4>Nokta Stilleri</h4>
+                        <div class="control-row">
+                            <label>Renk:</label>
+                            <input type="color" value="#ff0000">
+                        </div>
+                        <div class="control-row">
+                            <label>Boyut:</label>
+                            <input type="range" min="1" max="20" value="8" oninput="updateRangeValue(this)">
+                            <span class="value-display">8</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Şekil:</label>
+                            <select>
+                                <option>Daire</option>
+                                <option>Kare</option>
+                                <option>Üçgen</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Line Styles -->
+                <div id="lineStyles" class="style-content" style="display: none;">
+                    <div class="style-section">
+                        <h4>Çizgi Stilleri</h4>
+                        <div class="control-row">
+                            <label>Renk:</label>
+                            <input type="color" value="#0000ff">
+                        </div>
+                        <div class="control-row">
+                            <label>Kalınlık:</label>
+                            <input type="range" min="1" max="10" value="3" oninput="updateRangeValue(this)">
+                            <span class="value-display">3</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Stil:</label>
+                            <select>
+                                <option>Düz</option>
+                                <option>Kesikli</option>
+                                <option>Noktalı</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Polygon Styles -->
+                <div id="polygonStyles" class="style-content" style="display: none;">
+                    <div class="style-section">
+                        <h4>Alan Stilleri</h4>
+                        <div class="control-row">
+                            <label>Dolgu Rengi:</label>
+                            <input type="color" value="#00ff00">
+                        </div>
+                        <div class="control-row">
+                            <label>Çerçeve Rengi:</label>
+                            <input type="color" value="#000000">
+                        </div>
+                        <div class="control-row">
+                            <label>Şeffaflık:</label>
+                            <input type="range" min="0" max="100" value="50" name="opacity" oninput="updateRangeValue(this)">
+                            <span class="value-display">50%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeStyleModal()">İptal</button>
+                <button class="btn btn-primary" onclick="applyStyles()">Uygula</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grup Oluşturma Modal'ı -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Yeni Grup Oluştur</h3>
+                <button class="close-btn" onclick="closeCreateGroupModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="control-row">
+                    <label>Grup Adı:</label>
+                    <input type="text" id="groupName" placeholder="Grup adını girin...">
+                </div>
+                <div class="control-row">
+                    <label>Açıklama:</label>
+                    <textarea id="groupDesc" placeholder="Grup açıklaması..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateGroupModal()">İptal</button>
+                <button class="btn btn-primary" onclick="createGroup()">Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Katman Oluşturma Modal'ı -->
+    <div id="createLayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Yeni Katman Oluştur</h3>
+                <button class="close-btn" onclick="closeCreateLayerModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="control-row">
+                    <label>Katman Adı:</label>
+                    <input type="text" id="layerName" placeholder="Katman adını girin...">
+                </div>
+                <div class="control-row">
+                    <label>Katman Tipi:</label>
+                    <select id="layerType">
+                        <option value="point">Nokta</option>
+                        <option value="line">Çizgi</option>
+                        <option value="polygon">Alan</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <label>Grup:</label>
+                    <select id="layerGroup">
+                        <option value="group-1">Temel Haritalar</option>
+                        <option value="group-2">Vektör Veriler</option>
+                        <option value="group-3">Nesne Verileri</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateLayerModal()">İptal</button>
+                <button class="btn btn-primary" onclick="createLayer()">Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ölçüm Araçları -->
+    <div class="map-tools-container">
+        <div class="tool-group">
+            <div class="tool-group-title">ÖLÇÜM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="distanceBtn" onclick="startMeasurement('distance')" title="Mesafe Ölç">📏</button>
+                <button class="tool-btn" id="areaBtn" onclick="startMeasurement('area')" title="Alan Ölç">🔲</button>
+                <button class="tool-btn" onclick="clearMeasurements()" title="Temizle">🗑️</button>
+                <button class="tool-btn" onclick="openMeasurementSettings()" title="Ölçüm Ayarları">⚙️</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">ÇİZİM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="pointBtn" onclick="startDrawing('marker')" title="Nokta Çiz">📍</button>
+                <button class="tool-btn" id="lineBtn" onclick="startDrawing('polyline')" title="Çizgi Çiz">📝</button>
+                <button class="tool-btn" id="polygonBtn" onclick="startDrawing('polygon')" title="Poligon Çiz">🔷</button>
+                <button class="tool-btn" id="rectangleBtn" onclick="startDrawing('rectangle')" title="Dikdörtgen Çiz">⬛</button>
+                <button class="tool-btn" id="circleBtn" onclick="startDrawing('circle')" title="Daire Çiz">⭕</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">DÜZENLE</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="editBtn" onclick="toggleEditMode()" title="Düzenle">✏️</button>
+                <button class="tool-btn" id="deleteBtn" onclick="toggleDeleteMode()" title="Sil">🗑️</button>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="tool-group-title">GÖRÜNÜM</div>
+            <div class="tool-buttons">
+                <button class="tool-btn" id="legendBtn" onclick="toggleLegend()" title="Lejant">📋</button>
+                <button class="tool-btn" id="zoomExtentBtn" onclick="zoomToExtent()" title="Tümüne Zoom">🎯</button>
+                <button class="tool-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Tam Ekran">📺</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+    </div>
+
+    <!-- Legend Container -->
+    <div class="legend-container" id="legendContainer">
+        <div class="legend-header">
+            <span>Lejant</span>
+            <button class="toast-close" onclick="toggleLegend()">&times;</button>
+        </div>
+        <div class="legend-content" id="legendContent">
+            <div class="legend-item">
+                <div class="legend-symbol" style="background: #ff0000;"></div>
+                <div class="legend-label">Nokta Katmanları</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-symbol" style="background: #0000ff; height: 4px; margin-top: 8px;"></div>
+                <div class="legend-label">Çizgi Katmanları</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-symbol" style="background: rgba(0, 255, 0, 0.5); border: 2px solid #00ff00;"></div>
+                <div class="legend-label">Alan Katmanları</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Kısmı -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script>
+        // Global Variables
+        let map;
+        let drawnItems = L.featureGroup();
+        let isDrawing = false;
+        let currentTool = null;
+        let groups = [];
+        let layers = [];
+
+        // Initialize Map
+        function initMap() {
+            map = L.map('map').setView([39.9334, 32.8597], 6);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            map.addLayer(drawnItems);
+
+            // Mouse coordinate tracking
+            map.on('mousemove', function(e) {
+                document.getElementById('mouseCoords').textContent = 
+                    `Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`;
+            });
+        }
+
+        // Modal Functions
+        function showCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'block';
+        }
+
+        function closeCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'none';
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupDesc').value = '';
+        }
+
+        function showCreateLayerModal() {
+            document.getElementById('createLayerModal').style.display = 'block';
+        }
+
+        function closeCreateLayerModal() {
+            document.getElementById('createLayerModal').style.display = 'none';
+            document.getElementById('layerName').value = '';
+        }
+
+        function openStyleModal() {
+            document.getElementById('styleModal').style.display = 'block';
+        }
+
+        function closeStyleModal() {
+            document.getElementById('styleModal').style.display = 'none';
+        }
+
+        // Tab Functions
+        function switchTab(tabName) {
+            document.querySelectorAll('.style-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.style-content').forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Styles').style.display = 'block';
+        }
+
+        // Create Functions
+        function createGroup() {
+            const name = document.getElementById('groupName').value;
+            const desc = document.getElementById('groupDesc').value;
+            
+            if (!name) {
+                alert('Grup adı gerekli!');
+                return;
+            }
+
+            // Create new group
+            const newGroup = {
+                id: 'group-' + Date.now(),
+                name: name,
+                description: desc,
+                layers: [],
+                expanded: true,
+                visible: true
+            };
+
+            groups.push(newGroup);
+            renderGroups();
+            closeCreateGroupModal();
+        }
+
+        function createLayer() {
+            const name = document.getElementById('layerName').value;
+            const type = document.getElementById('layerType').value;
+            const groupId = document.getElementById('layerGroup').value;
+            
+            if (!name) {
+                alert('Katman adı gerekli!');
+                return;
+            }
+
+            // Create new layer
+            const newLayer = {
+                id: 'layer-' + Date.now(),
+                name: name,
+                type: type,
+                groupId: groupId,
+                visible: true,
+                styleMode: 'default'
+            };
+
+            layers.push(newLayer);
+            renderGroups();
+            closeCreateLayerModal();
+        }
+
+        // Drawing Tools
+
+
+        function clearMeasurements() {
+            drawnItems.clearLayers();
+            clearActiveTools();
+            console.log('Ölçümler temizlendi');
+        }
+
+        function clearActiveTools() {
+            currentTool = null;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            
+            if (map.pm) {
+                map.pm.disableDraw();
+            }
+        }
+
+        // Group Functions
+        function expandAllGroups() {
+            document.querySelectorAll('.group-items').forEach(items => {
+                items.classList.remove('collapsed');
+            });
+            document.querySelectorAll('.group-icon').forEach(icon => {
+                icon.textContent = '▼';
+                icon.classList.remove('collapsed');
+            });
+        }
+
+        function collapseAllGroups() {
+            document.querySelectorAll('.group-items').forEach(items => {
+                items.classList.add('collapsed');
+            });
+            document.querySelectorAll('.group-icon').forEach(icon => {
+                icon.textContent = '▶';
+                icon.classList.add('collapsed');
+            });
+        }
+
+        function toggleGroup(element) {
+            const groupItems = element.closest('.group-header').nextElementSibling;
+            const icon = element.querySelector('.group-icon') || element;
+            
+            if (groupItems.classList.contains('collapsed')) {
+                groupItems.classList.remove('collapsed');
+                icon.textContent = '▼';
+                icon.classList.remove('collapsed');
+            } else {
+                groupItems.classList.add('collapsed');
+                icon.textContent = '▶';
+                icon.classList.add('collapsed');
+            }
+        }
+
+        // Layer Functions
+        function toggleLayerVisibility(layerId) {
+            const checkbox = document.querySelector(`[data-layer-id="${layerId}"] .layer-visibility`);
+            console.log(`Katman ${layerId} görünürlüğü: ${checkbox.checked}`);
+        }
+
+        function editLayer(layerId) {
+            console.log(`Katman ${layerId} düzenleniyor`);
+            openStyleModal();
+        }
+
+        function deleteLayer(layerId) {
+            if (confirm('Bu katmanı silmek istediğinizden emin misiniz?')) {
+                console.log(`Katman ${layerId} silindi`);
+            }
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button class="toast-close" onclick="closeToast(this)">&times;</button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Show animation
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    closeToast(toast.querySelector('.toast-close'));
+                }
+            }, 3000);
+        }
+
+        function closeToast(button) {
+            const toast = button.closest('.toast');
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }
+
+        // Search and Filter Functions
+        function toggleLayerFilter() {
+            const panel = document.getElementById('searchFilterPanel');
+            const isVisible = panel.style.display !== 'none';
+            panel.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                document.getElementById('layerSearch').focus();
+            }
+        }
+
+        function clearFilter() {
+            document.getElementById('layerSearch').value = '';
+            document.querySelectorAll('.filter-type-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.filter-type-btn[data-type="all"]').classList.add('active');
+            
+            // Show all layers
+            document.querySelectorAll('.layer-item').forEach(item => {
+                item.style.display = 'flex';
+            });
+            
+            showToast('Filtre temizlendi', 'info');
+        }
+
+        function applyFilter() {
+            const searchTerm = document.getElementById('layerSearch').value.toLowerCase();
+            const activeType = document.querySelector('.filter-type-btn.active').dataset.type;
+            
+            let hiddenCount = 0;
+            document.querySelectorAll('.layer-item').forEach(item => {
+                const layerName = item.querySelector('.layer-name').textContent.toLowerCase();
+                const layerType = item.dataset.layerType || 'point'; // Default to point if not specified
+                
+                const matchesSearch = layerName.includes(searchTerm);
+                const matchesType = activeType === 'all' || layerType === activeType;
+                
+                if (matchesSearch && matchesType) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                    hiddenCount++;
+                }
+            });
+            
+            showToast(`${hiddenCount} katman gizlendi`, 'info');
+        }
+
+        // Layer Selection Functions
+        function selectLayer(element) {
+            // Clear all selections
+            document.querySelectorAll('.layer-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelectorAll('.group-header').forEach(header => {
+                header.classList.remove('selected');
+            });
+            
+            // Select clicked layer
+            element.closest('.layer-item').classList.add('selected');
+            
+            const layerId = element.closest('.layer-item').dataset.layerId;
+            console.log(`Katman seçildi: ${layerId}`);
+            showToast(`Katman seçildi: ${layerId}`, 'info');
+        }
+
+        function selectGroup(element) {
+            // Clear all selections
+            document.querySelectorAll('.layer-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelectorAll('.group-header').forEach(header => {
+                header.classList.remove('selected');
+            });
+            
+            // Select clicked group
+            element.closest('.group-header').classList.add('selected');
+            
+            const groupId = element.closest('.layer-group').dataset.groupId;
+            console.log(`Grup seçildi: ${groupId}`);
+            showToast(`Grup seçildi: ${groupId}`, 'info');
+        }
+
+        // Style Indicator Functions
+        function toggleStyleMode(element) {
+            const isDefault = element.classList.contains('default-mode');
+            
+            if (isDefault) {
+                element.classList.remove('default-mode');
+                element.classList.add('custom-mode');
+                element.textContent = 'C';
+                showToast('Özel stil moduna geçildi', 'success');
+            } else {
+                element.classList.remove('custom-mode');
+                element.classList.add('default-mode');
+                element.textContent = 'D';
+                showToast('Varsayılan stil moduna geçildi', 'info');
+            }
+            
+            // Open style modal for custom mode
+            if (!isDefault) {
+                openStyleModal();
+            }
+        }
+
+        // Range Slider Value Updates
+        function updateRangeValue(slider) {
+            const valueDisplay = slider.parentNode.querySelector('.value-display');
+            if (valueDisplay) {
+                let value = slider.value;
+                if (slider.name === 'opacity' || slider.name === 'transparency') {
+                    value += '%';
+                }
+                valueDisplay.textContent = value;
+            }
+        }
+
+        // Layer Properties Functions
+        function showLayerProperties(button) {
+            const layerItem = button.closest('.layer-item');
+            const layerId = layerItem.dataset.layerId;
+            const layerName = layerItem.querySelector('.layer-name').textContent;
+            
+            showToast(`${layerName} özellikleri gösteriliyor`, 'info');
+            console.log(`Katman ${layerId} özellikleri:`, {
+                id: layerId,
+                name: layerName,
+                visible: layerItem.querySelector('.layer-visibility').checked,
+                styleMode: layerItem.querySelector('.layer-style-mode-indicator').classList.contains('custom-mode') ? 'custom' : 'default'
+            });
+        }
+
+        function openLayerDetails(button) {
+            const layerItem = button.closest('.layer-item');
+            const layerId = layerItem.dataset.layerId;
+            const layerName = layerItem.querySelector('.layer-name').textContent;
+            
+            showToast(`${layerName} detayları açılıyor`, 'info');
+            // Here you would open a detailed properties modal
+        }
+
+        function openQueryModal(button) {
+            const layerItem = button.closest('.layer-item');
+            const layerId = layerItem.dataset.layerId;
+            const layerName = layerItem.querySelector('.layer-name').textContent;
+            
+            showToast(`${layerName} için sorgu aracı açılıyor`, 'info');
+            // Here you would open a query modal
+        }
+
+        function zoomToLayer(button) {
+            const layerItem = button.closest('.layer-item');
+            const layerId = layerItem.dataset.layerId;
+            const layerName = layerItem.querySelector('.layer-name').textContent;
+            
+            // Simulate zoom to layer
+            map.setView([39.9334, 32.8597], 8);
+            showToast(`${layerName} katmanına zoom yapıldı`, 'success');
+        }
+
+        function toggleAllLayersInGroup(event, checkbox) {
+            event.stopPropagation();
+            const groupItems = checkbox.closest('.layer-group').querySelector('.group-items');
+            const layerCheckboxes = groupItems.querySelectorAll('.layer-visibility');
+            
+            layerCheckboxes.forEach(layerCheckbox => {
+                layerCheckbox.checked = checkbox.checked;
+            });
+            
+            const groupName = checkbox.closest('.layer-group').querySelector('.group-name').textContent;
+            showToast(`${groupName} grubundaki tüm katmanlar ${checkbox.checked ? 'açıldı' : 'kapatıldı'}`, 'info');
+        }
+
+        // Advanced Measurement Functions
+        function openMeasurementSettings() {
+            showToast('Ölçüm ayarları açılıyor', 'info');
+            // Here you would open measurement settings modal
+        }
+
+        function startMeasurement(type) {
+            clearActiveTools();
+            currentTool = type;
+            
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            
+            if (type === 'distance') {
+                document.getElementById('distanceBtn').classList.add('active');
+                showToast('Mesafe ölçümü başlatıldı - Harita üzerine tıklayın', 'info');
+            } else if (type === 'area') {
+                document.getElementById('areaBtn').classList.add('active');
+                showToast('Alan ölçümü başlatıldı - Harita üzerine tıklayın', 'info');
+            }
+        }
+
+        // Drawing Functions
+        function startDrawing(type) {
+            clearActiveTools();
+            currentTool = type;
+            
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            
+            const buttonIds = {
+                'marker': 'pointBtn',
+                'polyline': 'lineBtn', 
+                'polygon': 'polygonBtn',
+                'rectangle': 'rectangleBtn',
+                'circle': 'circleBtn'
+            };
+            
+            if (buttonIds[type]) {
+                document.getElementById(buttonIds[type]).classList.add('active');
+                showToast(`${type} çizimi başlatıldı`, 'info');
+            }
+        }
+
+        // Edit/Delete Mode Functions
+        function toggleEditMode() {
+            const editBtn = document.getElementById('editBtn');
+            const isActive = editBtn.classList.contains('active');
+            
+            clearActiveTools();
+            
+            if (!isActive) {
+                editBtn.classList.add('active');
+                showToast('Düzenleme modu aktif', 'info');
+            } else {
+                showToast('Düzenleme modu kapatıldı', 'info');
+            }
+        }
+
+        function toggleDeleteMode() {
+            const deleteBtn = document.getElementById('deleteBtn');
+            const isActive = deleteBtn.classList.contains('active');
+            
+            clearActiveTools();
+            
+            if (!isActive) {
+                deleteBtn.classList.add('active');
+                showToast('Silme modu aktif - Nesnelere tıklayın', 'warning');
+            } else {
+                showToast('Silme modu kapatıldı', 'info');
+            }
+        }
+
+        // View Functions
+        function zoomToExtent() {
+            map.setView([39.9334, 32.8597], 6);
+            showToast('Tüm katmanlara zoom yapıldı', 'success');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                showToast('Tam ekran modu açıldı', 'success');
+            } else {
+                document.exitFullscreen();
+                showToast('Tam ekran modu kapatıldı', 'info');
+            }
+        }
+
+        // Scale Functions
+        function toggleScaleSelector(event) {
+            event.stopPropagation();
+            const selector = document.getElementById('scaleSelector');
+            const isVisible = selector.style.display !== 'none';
+            selector.style.display = isVisible ? 'none' : 'block';
+        }
+
+        function setFixedScale(scale) {
+            const scaleText = document.getElementById('scaleText');
+            scaleText.textContent = `1:${scale.toLocaleString()}`;
+            document.getElementById('scaleSelector').style.display = 'none';
+            
+            // Calculate zoom level based on scale (approximate)
+            let zoom = 18 - Math.log2(scale / 1000);
+            zoom = Math.max(1, Math.min(18, Math.round(zoom)));
+            map.setZoom(zoom);
+            
+            showToast(`Ölçek 1:${scale.toLocaleString()} olarak ayarlandı`, 'success');
+        }
+
+        function setDynamicScale() {
+            document.getElementById('scaleSelector').style.display = 'none';
+            showToast('Dinamik ölçek moduna geçildi', 'info');
+        }
+
+        function switchToDynamicScale() {
+            setDynamicScale();
+        }
+
+        function toggleLegend() {
+            const legend = document.getElementById('legendContainer');
+            const isVisible = legend.style.display !== 'none';
+            legend.style.display = isVisible ? 'none' : 'block';
+            
+            showToast(isVisible ? 'Lejant gizlendi' : 'Lejant gösterildi', 'info');
+        }
+
+        function fitToLayers() {
+            // This is an alias for zoomToExtent for backward compatibility
+            zoomToExtent();
+        }
+
+        function applyStyles() {
+            console.log('Stiller uygulandı');
+            closeStyleModal();
+        }
+
+        function renderGroups() {
+            // Group rendering logic would go here
+            console.log('Gruplar yeniden render edildi');
+        }
+
+        // Drag and Drop Functions
+        function initDragAndDrop() {
+            const layerItems = document.querySelectorAll('.layer-item[draggable="true"]');
+            const groupItems = document.querySelectorAll('.group-items');
+
+            layerItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+            });
+
+            groupItems.forEach(group => {
+                group.addEventListener('dragover', handleGroupDragOver);
+                group.addEventListener('drop', handleGroupDrop);
+                group.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+            e.dataTransfer.setData('layer-id', this.dataset.layerId);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (!this.classList.contains('dragging')) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (this.classList.contains('dragging')) return;
+            
+            const draggedId = e.dataTransfer.getData('layer-id');
+            const draggedElement = document.querySelector(`[data-layer-id="${draggedId}"]`);
+            
+            if (draggedElement && draggedElement !== this) {
+                const parent = this.parentNode;
+                parent.insertBefore(draggedElement, this.nextSibling);
+                console.log(`Katman ${draggedId} yeniden sıralandı`);
+            }
+            
+            this.classList.remove('drag-over');
+        }
+
+        function handleGroupDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        function handleGroupDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const draggedId = e.dataTransfer.getData('layer-id');
+            const draggedElement = document.querySelector(`[data-layer-id="${draggedId}"]`);
+            
+            if (draggedElement) {
+                this.appendChild(draggedElement);
+                console.log(`Katman ${draggedId} gruba taşındı`);
+            }
+            
+            this.classList.remove('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (!this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        // Modal Dragging System
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        function initModalDragging() {
+            document.querySelectorAll('.modal-content').forEach(modal => {
+                const header = modal.querySelector('.modal-header');
+                if (header) {
+                    header.addEventListener('mousedown', startDrag);
+                }
+            });
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function startDrag(e) {
+            if (e.target.tagName === 'BUTTON') return; // Don't drag when clicking buttons
+            
+            isDragging = true;
+            const modal = e.currentTarget.closest('.modal-content');
+            modal.classList.add('dragging');
+            
+            const rect = modal.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const modal = document.querySelector('.modal-content.dragging');
+            if (modal) {
+                const x = e.clientX - dragOffset.x;
+                const y = e.clientY - dragOffset.y;
+                
+                modal.style.left = x + 'px';
+                modal.style.top = y + 'px';
+                modal.style.transform = 'none';
+            }
+        }
+
+        function stopDrag() {
+            if (isDragging) {
+                isDragging = false;
+                document.querySelectorAll('.modal-content').forEach(modal => {
+                    modal.classList.remove('dragging');
+                });
+            }
+        }
+
+        // Filter Button Handlers
+        function initFilterButtons() {
+            document.querySelectorAll('.filter-type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-type-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Real-time search
+            const searchInput = document.getElementById('layerSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    if (this.value.length >= 2 || this.value.length === 0) {
+                        applyFilter();
+                    }
+                });
+            }
+        }
+
+        // Click handlers for existing elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Group header click handlers
+            document.querySelectorAll('.group-header').forEach(header => {
+                const icon = header.querySelector('.group-icon');
+                if (icon) {
+                    icon.addEventListener('click', () => toggleGroup(icon));
+                }
+            });
+
+            // Layer action handlers
+            document.querySelectorAll('.layer-action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const layerId = this.closest('.layer-item').dataset.layerId;
+                    const title = this.title;
+                    
+                    if (title === 'Düzenle') {
+                        editLayer(layerId);
+                    } else if (title === 'Sil') {
+                        deleteLayer(layerId);
+                    }
+                });
+            });
+
+            // Layer visibility handlers
+            document.querySelectorAll('.layer-visibility').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const layerId = this.closest('.layer-item').dataset.layerId;
+                    toggleLayerVisibility(layerId);
+                });
+            });
+
+            // Close modals when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
+                }
+                
+                // Close scale selector when clicking outside
+                const scaleSelector = document.getElementById('scaleSelector');
+                if (scaleSelector && !e.target.closest('.scale-display')) {
+                    scaleSelector.style.display = 'none';
+                }
+            });
+
+            // Initialize drag and drop
+            initDragAndDrop();
+            
+            // Initialize modal dragging
+            initModalDragging();
+            
+            // Initialize filter buttons
+            initFilterButtons();
+        });
+
+        // Initialize everything
+        console.log('CBS Katman Yönetim Sistemi başlatıldı');
+        initMap();
+        
+        // Show welcome toast
+        setTimeout(() => {
+            showToast('CBS Katman Yönetim Sistemi hazır!', 'success');
+        }, 1000);
+    </script>
+</body>
+</html> 
