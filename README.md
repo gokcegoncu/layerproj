@@ -4,9 +4,16 @@ Modern, responsive ve güvenli bir CBS (Coğrafi Bilgi Sistemi) katman yönetim 
 
 ## 📦 Versiyon Bilgisi
 
-**Production v3.2** - 2025-10-25
+**Production v3.3** - 2025-10-25
 
-### 🆕 v3.2 Yenilikleri
+### 🆕 v3.3 Yenilikleri (YENİ!)
+- 🎨 Demo veri oluşturma sistemi (4 farklı tip)
+- 📊 Tematik harita görselleştirme (3 yöntem)
+- 🎯 Tek tıkla test edilebilir senaryolar
+- 🌡️ Nüfus, gelir, kategori, sıcaklık demo verileri
+- 🔥 Isı haritası, quantile, kategori renklendirme
+
+### v3.2 Özellikleri
 - ✨ Akıllı etiket çakışma önleme sistemi
 - 📏 Çizgi ve poligonlarda otomatik kenar uzunlukları
 - 🎨 Renkli etiket sistemi (siyah, turuncu, mavi)
