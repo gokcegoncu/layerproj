@@ -4,7 +4,13 @@ Modern, responsive ve güvenli bir CBS (Coğrafi Bilgi Sistemi) katman yönetim 
 
 ## 📦 Versiyon Bilgisi
 
-**Production v3.1** - 2025-10-25
+**Production v3.2** - 2025-10-25
+
+### 🆕 v3.2 Yenilikleri
+- ✨ Akıllı etiket çakışma önleme sistemi
+- 📏 Çizgi ve poligonlarda otomatik kenar uzunlukları
+- 🎨 Renkli etiket sistemi (siyah, turuncu, mavi)
+- 🚀 Gelişmiş görsel netlik
 
 ## 🎯 Hangi Dosyayı Kullanmalıyım?
 
