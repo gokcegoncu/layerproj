@@ -6081,15 +6081,7 @@
             showNotification(`Katman özellikleri: ${layerId || 'Bilinmeyen'}`, 'info');
         }
 
-        function openStyleModal(type) {
-            console.log('openStyleModal çağrıldı:', type);
-            const modal = document.getElementById('styleModal');
-            if (modal) {
-                modal.style.display = 'block';
-            } else {
-                showNotification('Stil modal bulunamadı', 'warning');
-            }
-        }
+        // openStyleModal - duplike kaldırıldı, asıl fonksiyon aşağıda
 
         function openLayerDetails(button) {
             console.log('openLayerDetails çağrıldı');
@@ -8828,7 +8820,10 @@
             
             // Mevcut stilleri yükle
             loadCurrentStyles(type, featureId);
-            
+
+            // Tema sekmesi için katman verilerini otomatik analiz et
+            initializeThemeTab(layerId);
+
             // Modal'ı aç
             modal.style.display = 'block';
         }
@@ -12088,12 +12083,16 @@
             targetGroup.querySelector('.group-items').appendChild(layerItem);
 
             // Layer'ı kaydet
-            drawnLayers.push({
-                layerId: layerId,
+            const layerInfo = {
+                id: layerId,  // Benzersiz ID
+                layerId: layerId,  // Katman ID (hangi katmana ait)
                 groupId: groupId,
                 layer: layer,
+                type: properties.type,
                 properties: properties
-            });
+            };
+
+            drawnLayers.push(layerInfo);
 
             // Grup sayacını güncelle
             updateGroupLayerCount(targetGroup);
@@ -12283,7 +12282,66 @@
             updateGraduatedPreview();
         }
 
-        // Kategori önizlemesini güncelle
+        // Tema tabını aktif katman için initialize et
+        function initializeThemeTab(layerId) {
+            if (!layerId) return;
+
+            // Aktif katmandaki feature'ları bul
+            const layerFeatures = drawnLayers.filter(l => l.layerId === layerId);
+
+            if (layerFeatures.length === 0) return;
+
+            // Property'leri otomatik tespit et
+            const allProperties = new Set();
+            layerFeatures.forEach(feature => {
+                if (feature.properties) {
+                    Object.keys(feature.properties).forEach(key => {
+                        allProperties.add(key);
+                    });
+                }
+            });
+
+            // Kategori alanı dropdown'ını güncelle
+            const categoryField = document.getElementById('categoryField');
+            if (categoryField && allProperties.size > 0) {
+                // Mevcut seçeneği koru
+                const currentValue = categoryField.value;
+
+                // Yeni seçenekler ekle
+                categoryField.innerHTML = '<option value="">Seçiniz</option>';
+                allProperties.forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop.charAt(0).toUpperCase() + prop.slice(1);
+                    categoryField.appendChild(option);
+                });
+
+                // Eğer önceden seçili varsa geri yükle
+                if (currentValue && allProperties.has(currentValue)) {
+                    categoryField.value = currentValue;
+                }
+            }
+
+            // Değer alanı dropdown'ını güncelle
+            const valueField = document.getElementById('valueField');
+            if (valueField && allProperties.size > 0) {
+                const currentValue = valueField.value;
+
+                valueField.innerHTML = '<option value="">Seçiniz</option>';
+                allProperties.forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop.charAt(0).toUpperCase() + prop.slice(1);
+                    valueField.appendChild(option);
+                });
+
+                if (currentValue && allProperties.has(currentValue)) {
+                    valueField.value = currentValue;
+                }
+            }
+        }
+
+        // Kategori önizlemesini güncelle (SADECE AKTİF KATMAN)
         function updateCategoryPreview() {
             const fieldName = document.getElementById('categoryField').value;
             const rampName = document.getElementById('categoricalColorRamp').value;
@@ -12294,9 +12352,20 @@
                 return;
             }
 
-            // Mevcut katmanlardaki benzersiz kategorileri bul
+            // Modal'dan aktif layerId'yi al
+            const modal = document.getElementById('styleModal');
+            const layerId = modal?.dataset?.layerId;
+
+            if (!layerId) {
+                preview.innerHTML = '<p style="color: #999; font-size: 12px;">Aktif katman bulunamadı</p>';
+                return;
+            }
+
+            // Sadece aktif katmandaki feature'ları al
+            const layerFeatures = drawnLayers.filter(l => l.layerId === layerId);
             const categories = new Set();
-            drawnLayers.forEach(layerInfo => {
+
+            layerFeatures.forEach(layerInfo => {
                 if (layerInfo.properties && layerInfo.properties[fieldName]) {
                     categories.add(layerInfo.properties[fieldName]);
                 }
@@ -12319,7 +12388,7 @@
 
             categoriesArray.forEach((cat, i) => {
                 const color = colors[i % colors.length];
-                const count = drawnLayers.filter(l => l.properties && l.properties[fieldName] === cat).length;
+                const count = layerFeatures.filter(l => l.properties && l.properties[fieldName] === cat).length;
                 html += `
                     <div class="color-category-item">
                         <div class="color-category-swatch" style="background: ${color}"></div>
@@ -12332,7 +12401,7 @@
             preview.innerHTML = html;
         }
 
-        // Graduated önizlemesini güncelle
+        // Graduated önizlemesini güncelle (SADECE AKTİF KATMAN)
         function updateGraduatedPreview() {
             const fieldName = document.getElementById('valueField').value;
             const method = document.getElementById('classificationMethod').value;
@@ -12352,9 +12421,21 @@
                 return;
             }
 
+            // Modal'dan aktif layerId'yi al
+            const modal = document.getElementById('styleModal');
+            const layerId = modal?.dataset?.layerId;
+
+            if (!layerId) {
+                preview.innerHTML = '<p style="color: #999; font-size: 12px;">Aktif katman bulunamadı</p>';
+                return;
+            }
+
+            // Sadece aktif katmandaki feature'ları al
+            const layerFeatures = drawnLayers.filter(l => l.layerId === layerId);
+
             // Değerleri topla
             const values = [];
-            drawnLayers.forEach(layerInfo => {
+            layerFeatures.forEach(layerInfo => {
                 if (layerInfo.properties && layerInfo.properties[fieldName] !== undefined) {
                     values.push(layerInfo.properties[fieldName]);
                 }
@@ -12492,7 +12573,7 @@
             return sampled;
         }
 
-        // Kategorik stil uygula
+        // Kategorik stil uygula (SADECE AKTİF KATMAN)
         function applyCategorizedStyle() {
             const fieldName = document.getElementById('categoryField').value;
             const rampName = document.getElementById('categoricalColorRamp').value;
@@ -12502,9 +12583,26 @@
                 return;
             }
 
+            // Modal'dan aktif layerId'yi al
+            const modal = document.getElementById('styleModal');
+            const layerId = modal?.dataset?.layerId;
+
+            if (!layerId) {
+                showNotification('Aktif katman bulunamadı!', 'error');
+                return;
+            }
+
+            // Sadece aktif katmandaki feature'ları al
+            const layerFeatures = drawnLayers.filter(l => l.layerId === layerId);
+
+            if (layerFeatures.length === 0) {
+                showNotification('Bu katmanda özellik bulunamadı!', 'warning');
+                return;
+            }
+
             // Benzersiz kategorileri bul
             const categories = new Set();
-            drawnLayers.forEach(layerInfo => {
+            layerFeatures.forEach(layerInfo => {
                 if (layerInfo.properties && layerInfo.properties[fieldName]) {
                     categories.add(layerInfo.properties[fieldName]);
                 }
@@ -12523,29 +12621,38 @@
                 colorMap[cat] = colors[i % colors.length];
             });
 
-            // Her katmana renk uygula
+            // Her feature'a renk uygula (SADECE AKTİF KATMAN)
             let applied = 0;
-            drawnLayers.forEach(layerInfo => {
+            layerFeatures.forEach(layerInfo => {
                 if (layerInfo.properties && layerInfo.properties[fieldName]) {
                     const category = layerInfo.properties[fieldName];
                     const color = colorMap[category];
 
-                    if (layerInfo.layer.setStyle) {
-                        layerInfo.layer.setStyle({
+                    if (layerInfo.layer && layerInfo.layer.setStyle) {
+                        const style = {
                             fillColor: color,
                             color: darkenColor(color, 20),
                             weight: 2,
                             fillOpacity: 0.7
-                        });
+                        };
+
+                        // Point için circle marker ise radius ekle
+                        if (layerInfo.type === 'point' && layerInfo.layer.setRadius) {
+                            layerInfo.layer.setStyle(style);
+                        } else {
+                            layerInfo.layer.setStyle(style);
+                        }
+
                         applied++;
                     }
                 }
             });
 
-            showNotification(`✨ Kategorik stil uygulandı! (${applied} özellik)`, 'success');
+            showNotification(`✨ Kategorik stil uygulandı! (${applied} özellik, ${categories.size} kategori)`, 'success');
+            console.log(`Kategorik stil uygulandı: ${applied} özellik, katman: ${layerId}`);
         }
 
-        // Graduated stil uygula
+        // Graduated stil uygula (SADECE AKTİF KATMAN)
         function applyGraduatedStyle() {
             const fieldName = document.getElementById('valueField').value;
             const method = document.getElementById('classificationMethod').value;
@@ -12559,9 +12666,26 @@
                 return;
             }
 
+            // Modal'dan aktif layerId'yi al
+            const modal = document.getElementById('styleModal');
+            const layerId = modal?.dataset?.layerId;
+
+            if (!layerId) {
+                showNotification('Aktif katman bulunamadı!', 'error');
+                return;
+            }
+
+            // Sadece aktif katmandaki feature'ları al
+            const layerFeatures = drawnLayers.filter(l => l.layerId === layerId);
+
+            if (layerFeatures.length === 0) {
+                showNotification('Bu katmanda özellik bulunamadı!', 'warning');
+                return;
+            }
+
             // Değerleri topla
             const values = [];
-            drawnLayers.forEach(layerInfo => {
+            layerFeatures.forEach(layerInfo => {
                 if (layerInfo.properties && layerInfo.properties[fieldName] !== undefined) {
                     values.push(layerInfo.properties[fieldName]);
                 }
@@ -12583,9 +12707,9 @@
                 sampledColors.reverse();
             }
 
-            // Her katmana renk uygula
+            // Her feature'a renk uygula (SADECE AKTİF KATMAN)
             let applied = 0;
-            drawnLayers.forEach(layerInfo => {
+            layerFeatures.forEach(layerInfo => {
                 if (layerInfo.properties && layerInfo.properties[fieldName] !== undefined) {
                     const value = layerInfo.properties[fieldName];
 
@@ -12600,20 +12724,27 @@
 
                     const color = sampledColors[classIndex];
 
-                    if (layerInfo.layer.setStyle) {
-                        layerInfo.layer.setStyle({
+                    if (layerInfo.layer && layerInfo.layer.setStyle) {
+                        const style = {
                             fillColor: color,
                             color: darkenColor(color, 20),
                             weight: 2,
-                            fillOpacity: 0.7,
-                            radius: layerInfo.type === 'point' ? 8 : undefined
-                        });
+                            fillOpacity: 0.7
+                        };
+
+                        // Point için radius ekle
+                        if (layerInfo.type === 'point') {
+                            style.radius = 8;
+                        }
+
+                        layerInfo.layer.setStyle(style);
                         applied++;
                     }
                 }
             });
 
-            showNotification(`📊 Graduated stil uygulandı! (${applied} özellik)`, 'success');
+            showNotification(`📊 Graduated stil uygulandı! (${applied} özellik, ${numClasses} sınıf)`, 'success');
+            console.log(`Graduated stil uygulandı: ${applied} özellik, katman: ${layerId}, metod: ${method}`);
         }
 
         // Rengi koyulaştır (border için)
