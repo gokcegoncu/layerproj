@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <!--
-    CBS Katman Yönetim Sistemi - Production v3.3
+    CBS Katman Yönetim Sistemi - Production v3.4
 
     Production-Ready Version
     Build Date: 2025-10-25
+
+    Changelog v3.4:
+    🎨 Fixed demo data to use neutral colors initially
+    🎯 Demo objects now start with blue (#3388ff) color
+    ✨ Thematic coloring buttons now show visible color changes
+    🔥 Improved user experience for testing thematic visualizations
+    ✅ Ready for quantile, category, and heatmap testing
 
     Changelog v3.3:
     🆕 Demo data generation system (4 types)
@@ -55,7 +62,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBS Katman Yönetim Sistemi - Production v3.3</title>
+    <title>CBS Katman Yönetim Sistemi - Production v3.4</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <style>
@@ -11844,11 +11851,11 @@
         function createNufusDemoData(groupId) {
             const center = map.getCenter();
             const data = [
-                { name: 'Merkez İlçe', value: 125000, color: '#d73027', offset: [0, 0] },
-                { name: 'Kuzey Bölge', value: 85000, color: '#fc8d59', offset: [0.02, 0.02] },
-                { name: 'Güney Bölge', value: 95000, color: '#fee08b', offset: [0, -0.02] },
-                { name: 'Doğu Bölge', value: 62000, color: '#d9ef8b', offset: [0.02, 0] },
-                { name: 'Batı Bölge', value: 48000, color: '#91cf60', offset: [-0.02, 0] }
+                { name: 'Merkez İlçe', value: 125000, offset: [0, 0] },
+                { name: 'Kuzey Bölge', value: 85000, offset: [0.02, 0.02] },
+                { name: 'Güney Bölge', value: 95000, offset: [0, -0.02] },
+                { name: 'Doğu Bölge', value: 62000, offset: [0.02, 0] },
+                { name: 'Batı Bölge', value: 48000, offset: [-0.02, 0] }
             ];
 
             data.forEach(item => {
@@ -11857,8 +11864,8 @@
 
                 const circle = L.circleMarker([lat, lng], {
                     radius: Math.sqrt(item.value) / 30,
-                    fillColor: item.color,
-                    fillOpacity: 0.7,
+                    fillColor: '#3388ff',
+                    fillOpacity: 0.6,
                     color: '#fff',
                     weight: 2
                 }).addTo(drawnItems);
@@ -11879,19 +11886,19 @@
         function createGelirDemoData(groupId) {
             const center = map.getCenter();
             const data = [
-                { name: 'Yüksek Gelir', value: 8500, color: '#1a9850', coords: [[0.01, 0.01], [0.02, 0.01], [0.02, 0.02], [0.01, 0.02]] },
-                { name: 'Orta-Üst Gelir', value: 6200, color: '#91cf60', coords: [[-0.01, 0.01], [0, 0.01], [0, 0.02], [-0.01, 0.02]] },
-                { name: 'Orta Gelir', value: 4800, color: '#fee08b', coords: [[0.01, -0.01], [0.02, -0.01], [0.02, 0], [0.01, 0]] },
-                { name: 'Orta-Alt Gelir', value: 3400, color: '#fc8d59', coords: [[-0.01, -0.01], [0, -0.01], [0, 0], [-0.01, 0]] },
-                { name: 'Düşük Gelir', value: 2100, color: '#d73027', coords: [[-0.02, -0.01], [-0.01, -0.01], [-0.01, 0], [-0.02, 0]] }
+                { name: 'Yüksek Gelir', value: 8500, coords: [[0.01, 0.01], [0.02, 0.01], [0.02, 0.02], [0.01, 0.02]] },
+                { name: 'Orta-Üst Gelir', value: 6200, coords: [[-0.01, 0.01], [0, 0.01], [0, 0.02], [-0.01, 0.02]] },
+                { name: 'Orta Gelir', value: 4800, coords: [[0.01, -0.01], [0.02, -0.01], [0.02, 0], [0.01, 0]] },
+                { name: 'Orta-Alt Gelir', value: 3400, coords: [[-0.01, -0.01], [0, -0.01], [0, 0], [-0.01, 0]] },
+                { name: 'Düşük Gelir', value: 2100, coords: [[-0.02, -0.01], [-0.01, -0.01], [-0.01, 0], [-0.02, 0]] }
             ];
 
             data.forEach(item => {
                 const latlngs = item.coords.map(c => [center.lat + c[0], center.lng + c[1]]);
 
                 const polygon = L.polygon(latlngs, {
-                    fillColor: item.color,
-                    fillOpacity: 0.6,
+                    fillColor: '#3388ff',
+                    fillOpacity: 0.5,
                     color: '#333',
                     weight: 2
                 }).addTo(drawnItems);
@@ -11948,13 +11955,13 @@
         function createSicaklikDemoData(groupId) {
             const center = map.getCenter();
             const temps = [
-                { temp: 32, color: '#d73027', offset: [0.02, 0] },
-                { temp: 28, color: '#fc8d59', offset: [0.015, 0.015] },
-                { temp: 24, color: '#fee08b', offset: [0, 0.02] },
-                { temp: 20, color: '#d9ef8b', offset: [-0.015, 0.015] },
-                { temp: 16, color: '#91cf60', offset: [-0.02, 0] },
-                { temp: 12, color: '#4575b4', offset: [-0.015, -0.015] },
-                { temp: 8, color: '#313695', offset: [0, -0.02] }
+                { temp: 32, offset: [0.02, 0] },
+                { temp: 28, offset: [0.015, 0.015] },
+                { temp: 24, offset: [0, 0.02] },
+                { temp: 20, offset: [-0.015, 0.015] },
+                { temp: 16, offset: [-0.02, 0] },
+                { temp: 12, offset: [-0.015, -0.015] },
+                { temp: 8, offset: [0, -0.02] }
             ];
 
             temps.forEach(item => {
@@ -11963,8 +11970,8 @@
 
                 const circle = L.circleMarker([lat, lng], {
                     radius: 12,
-                    fillColor: item.color,
-                    fillOpacity: 0.7,
+                    fillColor: '#3388ff',
+                    fillOpacity: 0.6,
                     color: '#fff',
                     weight: 2
                 }).addTo(drawnItems);
