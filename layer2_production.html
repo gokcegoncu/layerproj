@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <!--
-    CBS Katman Yönetim Sistemi - Production v3.1
+    CBS Katman Yönetim Sistemi - Production v3.2
 
     Production-Ready Version
     Build Date: 2025-10-25
+
+    Changelog v3.2:
+    🆕 Smart label collision avoidance system
+    🆕 Edge labels for polylines and polygons (distance markers)
+    🆕 Improved label readability with better positioning
+    🆕 Automatic label hiding when overlapping
+    ✅ Enhanced visual clarity for complex geometries
 
     Changelog v3.1:
     ✅ Fixed CSS indentation errors (lines 2205, 2584)
@@ -38,7 +45,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBS Katman Yönetim Sistemi - Production v3.1</title>
+    <title>CBS Katman Yönetim Sistemi - Production v3.2</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <style>
@@ -1003,6 +1010,54 @@
 
         .measurement-tooltip:before {
             display: none !important;
+        }
+
+        /* Feature Label Styles - Collision Avoidance */
+        .feature-label {
+            background: rgba(0, 0, 0, 0.75) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            border-radius: 4px !important;
+            padding: 3px 6px !important;
+            font-weight: bold !important;
+            font-size: 11px !important;
+            white-space: nowrap !important;
+            pointer-events: none !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+            z-index: 1000 !important;
+            transition: opacity 0.2s ease !important;
+        }
+
+        .feature-label.hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* Edge Labels for Lines and Polygons */
+        .edge-label {
+            background: rgba(255, 165, 0, 0.85) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            border-radius: 3px !important;
+            padding: 2px 5px !important;
+            font-weight: 600 !important;
+            font-size: 10px !important;
+            white-space: nowrap !important;
+            pointer-events: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Segment Labels for Lines */
+        .segment-label {
+            background: rgba(33, 150, 243, 0.85) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            border-radius: 3px !important;
+            padding: 2px 4px !important;
+            font-weight: 500 !important;
+            font-size: 9px !important;
+            white-space: nowrap !important;
+            pointer-events: none !important;
         }
 
         /* Ölçüm Noktaları */
@@ -8654,36 +8709,79 @@
             updateRangeDisplays();
         }
 
-        // Tüm çizimlere etiket uygula
+        // Label collision detection and management
+        const labelManager = {
+            labels: [],
+
+            addLabel: function(bounds, element) {
+                this.labels.push({ bounds, element });
+            },
+
+            checkCollision: function(newBounds) {
+                return this.labels.some(label => this.boundsIntersect(label.bounds, newBounds));
+            },
+
+            boundsIntersect: function(a, b) {
+                return !(a.right < b.left ||
+                        a.left > b.right ||
+                        a.bottom < b.top ||
+                        a.top > b.bottom);
+            },
+
+            clear: function() {
+                this.labels = [];
+            },
+
+            getBounds: function(element) {
+                if (!element) return null;
+                const rect = element.getBoundingClientRect();
+                return {
+                    left: rect.left,
+                    right: rect.right,
+                    top: rect.top,
+                    bottom: rect.bottom
+                };
+            }
+        };
+
+        // Tüm çizimlere etiket uygula (Geliştirilmiş - Çakışma Önleme + Çevre Etiketleri)
         function applyLabelsToAllFeatures() {
-            const showLabels = document.getElementById('showLabels').checked;
-            const labelField = document.getElementById('labelField').value;
-            const fontSize = document.getElementById('fontSize').value;
-            const fontColor = document.getElementById('fontColor').value;
-            const haloColor = document.getElementById('haloColor').value;
-            const haloWidth = document.getElementById('haloWidth').value;
-            const labelPosition = document.getElementById('labelPosition').value;
-            
+            const showLabels = document.getElementById('showLabels') ? document.getElementById('showLabels').checked : false;
+            const labelField = document.getElementById('labelField') ? document.getElementById('labelField').value : 'name';
+            const fontSize = document.getElementById('fontSize') ? document.getElementById('fontSize').value : 11;
+            const fontColor = document.getElementById('fontColor') ? document.getElementById('fontColor').value : '#ffffff';
+            const haloColor = document.getElementById('haloColor') ? document.getElementById('haloColor').value : '#000000';
+            const haloWidth = document.getElementById('haloWidth') ? document.getElementById('haloWidth').value : 2;
+            const labelPosition = document.getElementById('labelPosition') ? document.getElementById('labelPosition').value : 'center';
+
+            // Label manager'ı temizle
+            labelManager.clear();
+
             if (!showLabels || !labelField) {
                 // Etiketleri gizle
                 drawnLayers.forEach(layerInfo => {
                     const layer = layerInfo.layer;
                     if (layer.closeTooltip) layer.closeTooltip();
                     if (layer.unbindTooltip) layer.unbindTooltip();
+                    // Edge labels'ı da temizle
+                    if (layer._edgeLabels) {
+                        layer._edgeLabels.forEach(marker => map.removeLayer(marker));
+                        layer._edgeLabels = [];
+                    }
                 });
                 return;
             }
-            
+
             // Tüm çizimlere etiket ekle
-            drawnLayers.forEach(layerInfo => {
+            drawnLayers.forEach((layerInfo, index) => {
                 const layer = layerInfo.layer;
                 const properties = layer.feature ? layer.feature.properties : {};
-                
+
                 let labelText = '';
                 if (labelField === 'name' && properties.name) {
                     labelText = properties.name;
                 } else if (labelField === 'type' && properties.type) {
-                    labelText = properties.type === 'point' ? 'Nokta' : 
+                    labelText = properties.type === 'point' ? 'Nokta' :
                                properties.type === 'line' ? 'Çizgi' : 'Poligon';
                 } else if (labelField === 'id' && properties.id) {
                     labelText = properties.id;
@@ -8691,24 +8789,27 @@
                     labelText = `${properties.area} m²`;
                 } else if (labelField === 'length' && properties.length) {
                     labelText = `${properties.length} m`;
+                } else {
+                    labelText = `Obje ${index + 1}`;
                 }
-                
+
                 if (labelText) {
+                    // Merkez etiket ekle
                     const tooltipOptions = {
                         permanent: true,
                         direction: labelPosition === 'center' ? 'center' : labelPosition,
                         className: 'feature-label',
                         offset: labelPosition === 'center' ? [0, 0] : [0, -10]
                     };
-                    
+
                     // Önceki tooltip'i kaldır
                     if (layer.getTooltip) layer.closeTooltip();
                     if (layer.unbindTooltip) layer.unbindTooltip();
-                    
+
                     // Yeni tooltip ekle
                     layer.bindTooltip(labelText, tooltipOptions);
-                    
-                    // CSS stilini uygula
+
+                    // CSS stilini uygula ve çakışma kontrolü yap
                     setTimeout(() => {
                         const tooltipElement = layer.getTooltip() ? layer.getTooltip()._container : null;
                         if (tooltipElement) {
@@ -8716,13 +8817,130 @@
                             tooltipElement.style.color = fontColor;
                             tooltipElement.style.textShadow = `1px 1px ${haloWidth}px ${haloColor}, -1px -1px ${haloWidth}px ${haloColor}, 1px -1px ${haloWidth}px ${haloColor}, -1px 1px ${haloWidth}px ${haloColor}`;
                             tooltipElement.style.fontWeight = 'bold';
-                            tooltipElement.style.backgroundColor = 'transparent';
-                            tooltipElement.style.border = 'none';
-                            tooltipElement.style.boxShadow = 'none';
+
+                            // Çakışma kontrolü
+                            const bounds = labelManager.getBounds(tooltipElement);
+                            if (bounds && labelManager.checkCollision(bounds)) {
+                                // Çakışma var - etiketi gizle veya konumunu değiştir
+                                tooltipElement.classList.add('hidden');
+                            } else if (bounds) {
+                                labelManager.addLabel(bounds, tooltipElement);
+                            }
                         }
-                    }, 100);
+                    }, 150);
+
+                    // Çizgi ve poligonlar için çevre etiketleri ekle
+                    if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
+                        addEdgeLabels(layer, labelText, fontSize, fontColor);
+                    }
                 }
             });
+        }
+
+        // Çizgi ve poligonlar için çevre etiketleri ekle
+        function addEdgeLabels(layer, baseText, fontSize, fontColor) {
+            // Önceki edge labels'ı temizle
+            if (layer._edgeLabels) {
+                layer._edgeLabels.forEach(marker => map.removeLayer(marker));
+            }
+            layer._edgeLabels = [];
+
+            const latlngs = layer.getLatLngs();
+            let points = [];
+
+            // Poligon için
+            if (layer instanceof L.Polygon) {
+                points = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
+            }
+            // Polyline için
+            else if (layer instanceof L.Polyline) {
+                points = latlngs;
+            }
+
+            if (points.length < 2) return;
+
+            // Her segment için etiket ekle (her 2. segment'te veya uzun çizgilerde)
+            for (let i = 0; i < points.length - 1; i++) {
+                // Sadece belirli aralıklarla etiket ekle (her 2. segment)
+                if (i % 2 !== 0 && points.length > 4) continue;
+
+                const p1 = points[i];
+                const p2 = points[i + 1];
+
+                // Segment ortası
+                const midLat = (p1.lat + p2.lat) / 2;
+                const midLng = (p1.lng + p2.lng) / 2;
+                const midPoint = L.latLng(midLat, midLng);
+
+                // Segment uzunluğu
+                const distance = map.distance(p1, p2);
+
+                // Çok kısa segmentleri atla
+                if (distance < 10) continue;
+
+                // Etiket metni
+                const edgeText = `${(distance).toFixed(1)}m`;
+
+                // DivIcon ile marker oluştur
+                const icon = L.divIcon({
+                    className: 'edge-label',
+                    html: edgeText,
+                    iconSize: [null, null],
+                    iconAnchor: [0, 0]
+                });
+
+                const marker = L.marker(midPoint, {
+                    icon: icon,
+                    interactive: false
+                }).addTo(map);
+
+                layer._edgeLabels.push(marker);
+
+                // Stil uygula
+                setTimeout(() => {
+                    const el = marker.getElement();
+                    if (el) {
+                        el.style.fontSize = (parseInt(fontSize) - 1) + 'px';
+                        el.style.color = fontColor;
+                    }
+                }, 50);
+            }
+
+            // Poligon için son noktayı da ekle
+            if (layer instanceof L.Polygon && points.length > 2) {
+                const p1 = points[points.length - 1];
+                const p2 = points[0];
+                const distance = map.distance(p1, p2);
+
+                if (distance >= 10) {
+                    const midLat = (p1.lat + p2.lat) / 2;
+                    const midLng = (p1.lng + p2.lng) / 2;
+                    const midPoint = L.latLng(midLat, midLng);
+
+                    const edgeText = `${(distance).toFixed(1)}m`;
+
+                    const icon = L.divIcon({
+                        className: 'edge-label',
+                        html: edgeText,
+                        iconSize: [null, null]
+                    });
+
+                    const marker = L.marker(midPoint, {
+                        icon: icon,
+                        interactive: false
+                    }).addTo(map);
+
+                    layer._edgeLabels.push(marker);
+
+                    setTimeout(() => {
+                        const el = marker.getElement();
+                        if (el) {
+                            el.style.fontSize = (parseInt(fontSize) - 1) + 'px';
+                            el.style.color = fontColor;
+                        }
+                    }, 50);
+                }
+            }
         }
 
         // Anında stil güncellemesi için event listener'ları başlat

@@ -2,6 +2,79 @@
 
 Tüm önemli değişiklikler bu dosyada belgelenmektedir.
 
+## [3.2.0] - 2025-10-25
+
+### 🎨 UX/UI İyileştirmeleri
+
+İkinci production güncellemesi. Etiket sistemi tamamen yenilendi, görsel netlik arttırıldı.
+
+### 🆕 Yeni Özellikler
+
+#### Akıllı Etiket Sistemi
+
+- **Etiket Çakışma Önleme**
+  - `labelManager` sistemi eklendi
+  - Otomatik çakışma algılama
+  - Çakışan etiketler gizleniyor
+  - Görsel karmaşa önleniyor
+  - Etki: Daha okunabilir haritalar
+
+- **Çevre Etiketleri (Edge Labels)**
+  - Çizgilerde segment uzunlukları gösteriliyor
+  - Poligonlarda kenar uzunlukları gösteriliyor
+  - Her segment için otomatik mesafe hesaplaması
+  - Kısa segmentler filtreleniyor (< 10m)
+  - Renkli etiket sistemi (turuncu kenar etiketleri)
+
+```javascript
+// Yeni eklenen fonksiyonlar
+labelManager.checkCollision()   // Çakışma kontrolü
+labelManager.addLabel()          // Etiket kaydetme
+addEdgeLabels()                  // Çevre etiketleri ekleme
+```
+
+### 🎨 CSS İyileştirmeleri
+
+#### Yeni CSS Sınıfları
+
+- `.feature-label` - Ana özellik etiketleri (siyah arka plan)
+- `.edge-label` - Kenar/çevre etiketleri (turuncu arka plan)
+- `.segment-label` - Segment etiketleri (mavi arka plan)
+- `.feature-label.hidden` - Çakışan etiketler için
+
+### 🔄 Değişiklikler
+
+#### Fonksiyon Güncellemeleri
+
+- **applyLabelsToAllFeatures()**
+  - Tamamen yeniden yazıldı
+  - Çakışma kontrolü eklendi
+  - Edge label desteği eklendi
+  - Defensive programming (null checks)
+  - Daha akıllı etiket pozisyonlama
+
+### 📊 Performans
+
+- Etiketler lazy load ediliyor (setTimeout ile)
+- Sadece görünür segmentlere etiket ekleniyor
+- Minimum mesafe filtresi (10m)
+- Verimli DOM manipülasyonu
+
+### 🎯 Kullanıcı Deneyimi
+
+**Önceki Durum:**
+- Etiketler üst üste biniyordu ❌
+- Çizgilerde uzunluk bilgisi yoktu ❌
+- Poligonlarda kenar ölçüleri yoktu ❌
+
+**Yeni Durum:**
+- Etiketler asla çakışmıyor ✅
+- Çizgilerde her segment gösteriliyor ✅
+- Poligonlarda tüm kenarlar ölçülü ✅
+- Otomatik filtreleme (kısa segmentler) ✅
+
+---
+
 ## [3.1.0] - 2025-10-25
 
 ### 🎉 Production Release
