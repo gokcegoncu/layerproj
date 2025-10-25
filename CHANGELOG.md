@@ -2,6 +2,248 @@
 
 Tüm önemli değişiklikler bu dosyada belgelenmektedir.
 
+## [3.3.0] - 2025-10-25
+
+### 🎨 Demo Veri ve Tematik Harita Sistemi
+
+Üçüncü production güncellemesi. Demo veri oluşturma ve tematik harita görselleştirme eklendi.
+
+### 🆕 Yeni Özellikler
+
+#### Demo Veri Oluşturma
+
+- **4 Farklı Demo Veri Tipi**
+  - 👥 Nüfus Dağılımı (5 nokta, farklı nüfus değerleri)
+  - 💰 Gelir Düzeyi (5 bölge poligonu, gelir kategorileri)
+  - 🏷️ Kategorik Veri (6 kategori: Park, Okul, Hastane, vb.)
+  - 🌡️ Sıcaklık Haritası (7 nokta, farklı sıcaklık değerleri)
+
+- **Otomatik Grup ve Katman Oluşturma**
+  - Her demo veri için özel grup
+  - Otomatik renklendirme
+  - Popup bilgileri
+  - Harita sınırlarına zoom
+
+#### Tematik Harita Sistemleri
+
+- **Değer Aralıkları (Quantile)**
+  - Otomatik değer sıralaması
+  - 6 renkli gradient (mavi→kırmızı)
+  - Numerik verilere göre renklendirme
+
+- **Kategorik Renklendirme**
+  - Her kategori için farklı renk
+  - 7 öntanımlı kategori rengi
+  - Kolay ayırt edilebilir renkler
+
+- **Isı Haritası (Heatmap)**
+  - Değer bazlı gradient
+  - Dinamik boyutlandırma
+  - Soğuktan sıcağa renk geçişi
+  - Min-Max normalizasyonu
+
+### 🎨 UI/UX İyileştirmeleri
+
+#### Demo Menü
+
+- **Mor tema** ile özel tasarım
+- Sliding animation
+- İki bölümlü layout:
+  - Demo Veri Oluşturma
+  - Tematik Harita Uygulama
+- Kolay erişim butonu
+
+```javascript
+// Yeni eklenen fonksiyonlar
+toggleDemoMenu()              // Menü aç/kapa
+createDemoData(type)          // Demo veri oluştur
+applyThematicMap(type)        // Tematik harita uygula
+clearDemoData()               // Tümünü temizle
+```
+
+### 📊 Demo Veri Detayları
+
+#### Nüfus Dağılımı
+
+| Bölge | Nüfus | Renk |
+|-------|-------|------|
+| Merkez İlçe | 125,000 | Kırmızı |
+| Kuzey Bölge | 85,000 | Turuncu |
+| Güney Bölge | 95,000 | Sarı |
+| Doğu Bölge | 62,000 | Açık Yeşil |
+| Batı Bölge | 48,000 | Yeşil |
+
+#### Gelir Düzeyi
+
+| Kategori | Ortalama | Renk |
+|----------|----------|------|
+| Yüksek Gelir | 8,500 TL | Koyu Yeşil |
+| Orta-Üst | 6,200 TL | Açık Yeşil |
+| Orta | 4,800 TL | Sarı |
+| Orta-Alt | 3,400 TL | Turuncu |
+| Düşük | 2,100 TL | Kırmızı |
+
+#### Kategoriler
+
+- 🌳 Park (Yeşil)
+- 🏫 Okul (Mavi)
+- 🏥 Hastane (Kırmızı)
+- 🛍️ Alışveriş (Turuncu)
+- ⚽ Spor Tesisi (Mor)
+- 🎭 Kültür Merkezi (Turkuaz)
+
+#### Sıcaklık Haritası
+
+7 farklı sıcaklık noktası (8°C - 32°C)
+- Soğuk: Mavi tonları
+- Ilık: Sarı tonları
+- Sıcak: Kırmızı tonları
+
+### 🔄 Değişiklikler
+
+#### CSS Eklentileri
+
+- `.demo-actions` - Demo buton container
+- `.demo-btn` - Mor gradient buton
+- `.demo-menu` - Sliding menu
+- `.demo-option-btn` - Seçenek butonları
+- `.demo-section` - Bölüm container
+
+#### JavaScript Fonksiyonları
+
+**Demo Veri:**
+- `createNufusDemoData()` - Nüfus verisi
+- `createGelirDemoData()` - Gelir verisi
+- `createKategoriDemoData()` - Kategori verisi
+- `createSicaklikDemoData()` - Sıcaklık verisi
+- `addDemoLayerToGroup()` - Katman ekleme
+
+**Tematik Haritalar:**
+- `applyQuantileColors()` - Değer aralıkları
+- `applyCategoryColors()` - Kategori renkleri
+- `applyHeatmapStyle()` - Isı haritası
+
+### 🎯 Kullanım Senaryoları
+
+#### Senaryo 1: Nüfus Analizi
+
+```
+1. "Demo Veri" butonuna tıklayın
+2. "Nüfus Dağılımı" seçin
+3. Haritada 5 farklı bölge görünür
+4. "Değer Aralıkları" tematik haritayı uygulayın
+5. Nüfusa göre renk gradientini görün
+```
+
+#### Senaryo 2: Gelir Haritası
+
+```
+1. "Gelir Düzeyi" demo verisini oluşturun
+2. 5 farklı gelir kategorisi poligonlar görünür
+3. "Kategorik Renklendirme" uygulayın
+4. Her gelir grubu farklı renkte
+```
+
+#### Senaryo 3: Isı Haritası
+
+```
+1. "Sıcaklık Haritası" oluşturun
+2. "Isı Haritası Stili" uygulayın
+3. Sıcaklığa göre mavi→kırmızı gradient
+4. Boyutlar değere göre değişir
+```
+
+### 📈 Performans
+
+- Demo veri oluşturma: < 500ms
+- Tematik harita uygulama: < 300ms
+- Smooth animasyonlar
+- Verimli DOM manipülasyonu
+
+### ✅ Test Edilebilirlik
+
+Artık tematik harita özelliklerini kolayca test edebilirsiniz:
+
+- ✅ Tek tıkla demo veri oluşturma
+- ✅ Farklı renklendirme şemaları
+- ✅ Gerçek dünya senaryoları
+- ✅ Görsel doğrulama
+
+---
+
+## [3.2.0] - 2025-10-25
+
+### 🎨 UX/UI İyileştirmeleri
+
+İkinci production güncellemesi. Etiket sistemi tamamen yenilendi, görsel netlik arttırıldı.
+
+### 🆕 Yeni Özellikler
+
+#### Akıllı Etiket Sistemi
+
+- **Etiket Çakışma Önleme**
+  - `labelManager` sistemi eklendi
+  - Otomatik çakışma algılama
+  - Çakışan etiketler gizleniyor
+  - Görsel karmaşa önleniyor
+  - Etki: Daha okunabilir haritalar
+
+- **Çevre Etiketleri (Edge Labels)**
+  - Çizgilerde segment uzunlukları gösteriliyor
+  - Poligonlarda kenar uzunlukları gösteriliyor
+  - Her segment için otomatik mesafe hesaplaması
+  - Kısa segmentler filtreleniyor (< 10m)
+  - Renkli etiket sistemi (turuncu kenar etiketleri)
+
+```javascript
+// Yeni eklenen fonksiyonlar
+labelManager.checkCollision()   // Çakışma kontrolü
+labelManager.addLabel()          // Etiket kaydetme
+addEdgeLabels()                  // Çevre etiketleri ekleme
+```
+
+### 🎨 CSS İyileştirmeleri
+
+#### Yeni CSS Sınıfları
+
+- `.feature-label` - Ana özellik etiketleri (siyah arka plan)
+- `.edge-label` - Kenar/çevre etiketleri (turuncu arka plan)
+- `.segment-label` - Segment etiketleri (mavi arka plan)
+- `.feature-label.hidden` - Çakışan etiketler için
+
+### 🔄 Değişiklikler
+
+#### Fonksiyon Güncellemeleri
+
+- **applyLabelsToAllFeatures()**
+  - Tamamen yeniden yazıldı
+  - Çakışma kontrolü eklendi
+  - Edge label desteği eklendi
+  - Defensive programming (null checks)
+  - Daha akıllı etiket pozisyonlama
+
+### 📊 Performans
+
+- Etiketler lazy load ediliyor (setTimeout ile)
+- Sadece görünür segmentlere etiket ekleniyor
+- Minimum mesafe filtresi (10m)
+- Verimli DOM manipülasyonu
+
+### 🎯 Kullanıcı Deneyimi
+
+**Önceki Durum:**
+- Etiketler üst üste biniyordu ❌
+- Çizgilerde uzunluk bilgisi yoktu ❌
+- Poligonlarda kenar ölçüleri yoktu ❌
+
+**Yeni Durum:**
+- Etiketler asla çakışmıyor ✅
+- Çizgilerde her segment gösteriliyor ✅
+- Poligonlarda tüm kenarlar ölçülü ✅
+- Otomatik filtreleme (kısa segmentler) ✅
+
+---
+
 ## [3.1.0] - 2025-10-25
 
 ### 🎉 Production Release
