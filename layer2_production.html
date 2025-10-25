@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <!--
-    CBS Katman Yönetim Sistemi - Production v3.2
+    CBS Katman Yönetim Sistemi - Production v3.3
 
     Production-Ready Version
     Build Date: 2025-10-25
+
+    Changelog v3.3:
+    🆕 Demo data generation system (4 types)
+    🆕 Thematic mapping features (quantile, category, heatmap)
+    🆕 Interactive demo menu with purple styling
+    🆕 Population, income, category, temperature demo datasets
+    🎨 Automatic color schemes based on data values
+    🎨 Category-based coloring system
+    🔥 Heatmap style visualization
+    ✅ Test and visualization ready
 
     Changelog v3.2:
     🆕 Smart label collision avoidance system
@@ -45,7 +55,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBS Katman Yönetim Sistemi - Production v3.2</title>
+    <title>CBS Katman Yönetim Sistemi - Production v3.3</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <style>
@@ -2296,6 +2306,167 @@
             transform: translateY(0);
         }
 
+        /* Demo Veri Butonları */
+        .demo-actions {
+            margin-top: var(--spacing-sm);
+            padding-top: var(--spacing-sm);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .demo-btn {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-medium);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            transition: all var(--transition-base);
+            box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
+        }
+
+        .demo-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .demo-btn:hover {
+            background: linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(156, 39, 176, 0.4);
+        }
+
+        .demo-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Demo Menü */
+        .demo-menu {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-medium);
+            margin: var(--spacing-sm);
+            box-shadow: var(--shadow-medium);
+            overflow: hidden;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .demo-menu-header {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            color: white;
+            padding: var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .demo-menu-header h4 {
+            margin: 0;
+            font-size: var(--font-size-md);
+            font-weight: 600;
+        }
+
+        .demo-menu-header .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            transition: all var(--transition-base);
+        }
+
+        .demo-menu-header .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .demo-menu-content {
+            padding: var(--spacing-md);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .demo-section {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .demo-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .demo-section h5 {
+            margin: 0 0 var(--spacing-sm) 0;
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .demo-option-btn {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
+            background: linear-gradient(135deg, #f5f5f5 0%, #e9ecef 100%);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+            text-align: left;
+            transition: all var(--transition-base);
+            color: var(--text-primary);
+        }
+
+        .demo-option-btn:hover {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: #2196f3;
+            transform: translateX(4px);
+            box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+        }
+
+        .demo-option-btn.danger {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #c62828;
+            border-color: #ef5350;
+        }
+
+        .demo-option-btn.danger:hover {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+            color: white;
+            border-color: #c62828;
+        }
+
+        [data-theme="dark"] .demo-menu {
+            background: var(--bg-secondary);
+            border-color: var(--border-dark);
+        }
+
+        [data-theme="dark"] .demo-option-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-dark);
+        }
+
          /* Responsive Tasarım */
          @media (max-width: 768px) {
              .create-buttons {
@@ -3086,6 +3257,59 @@
                         </svg>
                         Tümünü Kapat
                     </button>
+                </div>
+
+                <!-- Demo Veri ve Tematik Harita Butonları -->
+                <div class="demo-actions">
+                    <button class="demo-btn" onclick="toggleDemoMenu()" title="Demo Veri ve Tematik Haritalar">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                        </svg>
+                        Demo Veri
+                    </button>
+                </div>
+            </div>
+
+            <!-- Demo Veri Menüsü -->
+            <div class="demo-menu" id="demoMenu" style="display: none;">
+                <div class="demo-menu-header">
+                    <h4>🎨 Demo Veri ve Tematik Haritalar</h4>
+                    <button class="close-btn" onclick="toggleDemoMenu()">×</button>
+                </div>
+                <div class="demo-menu-content">
+                    <div class="demo-section">
+                        <h5>📍 Demo Veri Oluştur</h5>
+                        <button class="demo-option-btn" onclick="createDemoData('nufus')">
+                            👥 Nüfus Dağılımı (5 nokta)
+                        </button>
+                        <button class="demo-option-btn" onclick="createDemoData('gelir')">
+                            💰 Gelir Düzeyi (5 bölge)
+                        </button>
+                        <button class="demo-option-btn" onclick="createDemoData('kategori')">
+                            🏷️ Kategorik Veri (6 obje)
+                        </button>
+                        <button class="demo-option-btn" onclick="createDemoData('sicaklik')">
+                            🌡️ Sıcaklık Haritası (7 nokta)
+                        </button>
+                    </div>
+                    <div class="demo-section">
+                        <h5>🎨 Tematik Harita Uygula</h5>
+                        <button class="demo-option-btn" onclick="applyThematicMap('quantile')">
+                            📊 Değer Aralıkları (Quantile)
+                        </button>
+                        <button class="demo-option-btn" onclick="applyThematicMap('category')">
+                            🎯 Kategorik Renklendirme
+                        </button>
+                        <button class="demo-option-btn" onclick="applyThematicMap('heatmap')">
+                            🔥 Isı Haritası Stili
+                        </button>
+                        <button class="demo-option-btn danger" onclick="clearDemoData()">
+                            🗑️ Tümünü Temizle
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="layer-list" id="layerList">
@@ -11543,7 +11767,410 @@
                 closeMeasurementSettings();
             }
         });
-        
+
+        // ====================================
+        // DEMO VERİ VE TEMATİK HARİTA SİSTEMİ
+        // ====================================
+
+        // Demo menüyü aç/kapa
+        function toggleDemoMenu() {
+            const menu = document.getElementById('demoMenu');
+            if (menu.style.display === 'none' || !menu.style.display) {
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        // Demo veri oluştur
+        function createDemoData(type) {
+            const validation = validateName("Demo " + type);
+            if (!validation.valid) return;
+
+            showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} demo verisi oluşturuluyor...`, 'info');
+
+            // Demo Grup Oluştur
+            const groupId = 'demo-group-' + Date.now();
+            createDemoGroup(groupId, `📊 Demo: ${type.toUpperCase()}`);
+
+            setTimeout(() => {
+                switch(type) {
+                    case 'nufus':
+                        createNufusDemoData(groupId);
+                        break;
+                    case 'gelir':
+                        createGelirDemoData(groupId);
+                        break;
+                    case 'kategori':
+                        createKategoriDemoData(groupId);
+                        break;
+                    case 'sicaklik':
+                        createSicaklikDemoData(groupId);
+                        break;
+                }
+
+                showNotification(`${type.toUpperCase()} demo verisi oluşturuldu!`, 'success');
+                toggleDemoMenu();
+            }, 300);
+        }
+
+        // Demo grup oluştur
+        function createDemoGroup(groupId, groupName) {
+            const groupContainer = document.querySelector('#layerList');
+            const layerGroup = document.createElement('div');
+            layerGroup.className = 'layer-group';
+            layerGroup.setAttribute('data-group-id', groupId);
+
+            layerGroup.innerHTML = `
+                <div class="group-header">
+                    <div class="group-visibility-area" title="Tüm katmanları aç/kapat">
+                        <input type="checkbox" class="group-visibility-checkbox" checked onclick="toggleAllLayersInGroup(event, this)">
+                    </div>
+                    <div class="group-select-area" onclick="selectGroup(this)">
+                        <span class="group-name">${groupName}</span>
+                        <span class="group-count">0</span>
+                    </div>
+                    <div class="group-toggle-area" onclick="toggleGroup(this)">
+                        <span class="group-icon">▼</span>
+                    </div>
+                </div>
+                <div class="group-items"></div>
+            `;
+
+            groupContainer.appendChild(layerGroup);
+        }
+
+        // Nüfus dağılımı demo verisi
+        function createNufusDemoData(groupId) {
+            const center = map.getCenter();
+            const data = [
+                { name: 'Merkez İlçe', value: 125000, color: '#d73027', offset: [0, 0] },
+                { name: 'Kuzey Bölge', value: 85000, color: '#fc8d59', offset: [0.02, 0.02] },
+                { name: 'Güney Bölge', value: 95000, color: '#fee08b', offset: [0, -0.02] },
+                { name: 'Doğu Bölge', value: 62000, color: '#d9ef8b', offset: [0.02, 0] },
+                { name: 'Batı Bölge', value: 48000, color: '#91cf60', offset: [-0.02, 0] }
+            ];
+
+            data.forEach(item => {
+                const lat = center.lat + item.offset[0];
+                const lng = center.lng + item.offset[1];
+
+                const circle = L.circleMarker([lat, lng], {
+                    radius: Math.sqrt(item.value) / 30,
+                    fillColor: item.color,
+                    fillOpacity: 0.7,
+                    color: '#fff',
+                    weight: 2
+                }).addTo(drawnItems);
+
+                circle.bindPopup(`<b>${item.name}</b><br>Nüfus: ${item.value.toLocaleString()}`);
+
+                addDemoLayerToGroup(groupId, item.name, circle, {
+                    type: 'point',
+                    value: item.value,
+                    category: 'nüfus'
+                });
+            });
+
+            map.fitBounds(drawnItems.getBounds());
+        }
+
+        // Gelir düzeyi demo verisi
+        function createGelirDemoData(groupId) {
+            const center = map.getCenter();
+            const data = [
+                { name: 'Yüksek Gelir', value: 8500, color: '#1a9850', coords: [[0.01, 0.01], [0.02, 0.01], [0.02, 0.02], [0.01, 0.02]] },
+                { name: 'Orta-Üst Gelir', value: 6200, color: '#91cf60', coords: [[-0.01, 0.01], [0, 0.01], [0, 0.02], [-0.01, 0.02]] },
+                { name: 'Orta Gelir', value: 4800, color: '#fee08b', coords: [[0.01, -0.01], [0.02, -0.01], [0.02, 0], [0.01, 0]] },
+                { name: 'Orta-Alt Gelir', value: 3400, color: '#fc8d59', coords: [[-0.01, -0.01], [0, -0.01], [0, 0], [-0.01, 0]] },
+                { name: 'Düşük Gelir', value: 2100, color: '#d73027', coords: [[-0.02, -0.01], [-0.01, -0.01], [-0.01, 0], [-0.02, 0]] }
+            ];
+
+            data.forEach(item => {
+                const latlngs = item.coords.map(c => [center.lat + c[0], center.lng + c[1]]);
+
+                const polygon = L.polygon(latlngs, {
+                    fillColor: item.color,
+                    fillOpacity: 0.6,
+                    color: '#333',
+                    weight: 2
+                }).addTo(drawnItems);
+
+                polygon.bindPopup(`<b>${item.name}</b><br>Ortalama: ${item.value.toLocaleString()} TL`);
+
+                addDemoLayerToGroup(groupId, item.name, polygon, {
+                    type: 'polygon',
+                    value: item.value,
+                    category: 'gelir'
+                });
+            });
+
+            map.fitBounds(drawnItems.getBounds());
+        }
+
+        // Kategorik veri demo verisi
+        function createKategoriDemoData(groupId) {
+            const center = map.getCenter();
+            const categories = [
+                { name: 'Park', color: '#2ecc71', icon: '🌳', offset: [0.015, 0.015] },
+                { name: 'Okul', color: '#3498db', icon: '🏫', offset: [-0.015, 0.015] },
+                { name: 'Hastane', color: '#e74c3c', icon: '🏥', offset: [0.015, -0.015] },
+                { name: 'Alışveriş', color: '#f39c12', icon: '🛍️', offset: [-0.015, -0.015] },
+                { name: 'Spor Tesisi', color: '#9b59b6', icon: '⚽', offset: [0, 0.02] },
+                { name: 'Kültür Merkezi', color: '#16a085', icon: '🎭', offset: [0, -0.02] }
+            ];
+
+            categories.forEach(cat => {
+                const lat = center.lat + cat.offset[0];
+                const lng = center.lng + cat.offset[1];
+
+                const marker = L.circleMarker([lat, lng], {
+                    radius: 10,
+                    fillColor: cat.color,
+                    fillOpacity: 0.8,
+                    color: '#fff',
+                    weight: 3
+                }).addTo(drawnItems);
+
+                marker.bindPopup(`<b>${cat.icon} ${cat.name}</b><br>Kategori: ${cat.name}`);
+
+                addDemoLayerToGroup(groupId, cat.name, marker, {
+                    type: 'point',
+                    category: cat.name,
+                    color: cat.color
+                });
+            });
+
+            map.fitBounds(drawnItems.getBounds());
+        }
+
+        // Sıcaklık haritası demo verisi
+        function createSicaklikDemoData(groupId) {
+            const center = map.getCenter();
+            const temps = [
+                { temp: 32, color: '#d73027', offset: [0.02, 0] },
+                { temp: 28, color: '#fc8d59', offset: [0.015, 0.015] },
+                { temp: 24, color: '#fee08b', offset: [0, 0.02] },
+                { temp: 20, color: '#d9ef8b', offset: [-0.015, 0.015] },
+                { temp: 16, color: '#91cf60', offset: [-0.02, 0] },
+                { temp: 12, color: '#4575b4', offset: [-0.015, -0.015] },
+                { temp: 8, color: '#313695', offset: [0, -0.02] }
+            ];
+
+            temps.forEach(item => {
+                const lat = center.lat + item.offset[0];
+                const lng = center.lng + item.offset[1];
+
+                const circle = L.circleMarker([lat, lng], {
+                    radius: 12,
+                    fillColor: item.color,
+                    fillOpacity: 0.7,
+                    color: '#fff',
+                    weight: 2
+                }).addTo(drawnItems);
+
+                circle.bindPopup(`<b>Sıcaklık</b><br>${item.temp}°C`);
+
+                addDemoLayerToGroup(groupId, `${item.temp}°C`, circle, {
+                    type: 'point',
+                    value: item.temp,
+                    category: 'sıcaklık'
+                });
+            });
+
+            map.fitBounds(drawnItems.getBounds());
+        }
+
+        // Demo katman oluştur ve gruba ekle
+        function addDemoLayerToGroup(groupId, layerName, layer, properties) {
+            const targetGroup = document.querySelector(`[data-group-id="${groupId}"]`);
+            if (!targetGroup) return;
+
+            const layerId = 'demo-layer-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+            const layerItem = document.createElement('div');
+            layerItem.className = 'layer-item';
+            layerItem.setAttribute('data-layer-id', layerId);
+
+            layerItem.innerHTML = `
+                <input type="checkbox" class="layer-visibility" checked>
+                <div class="layer-selectable-area">
+                    <div class="layer-icons">
+                        <div class="layer-icon ${properties.type === 'point' ? 'active' : 'inactive'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="8"/>
+                            </svg>
+                        </div>
+                        <div class="layer-icon inactive">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M2 8 L8 8 L12 16 L16 16 L22 8" fill="none" stroke="currentColor" stroke-width="3"/>
+                            </svg>
+                        </div>
+                        <div class="layer-icon ${properties.type === 'polygon' ? 'active' : 'inactive'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <polygon points="12,2 2,10 5,21 19,21 22,10" fill="currentColor"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span class="layer-name">${layerName}</span>
+                </div>
+            `;
+
+            targetGroup.querySelector('.group-items').appendChild(layerItem);
+
+            // Layer'ı kaydet
+            drawnLayers.push({
+                layerId: layerId,
+                groupId: groupId,
+                layer: layer,
+                properties: properties
+            });
+
+            // Grup sayacını güncelle
+            updateGroupLayerCount(targetGroup);
+        }
+
+        // Tematik harita uygula
+        function applyThematicMap(type) {
+            showNotification(`${type} tematik harita uygulanıyor...`, 'info');
+
+            setTimeout(() => {
+                switch(type) {
+                    case 'quantile':
+                        applyQuantileColors();
+                        break;
+                    case 'category':
+                        applyCategoryColors();
+                        break;
+                    case 'heatmap':
+                        applyHeatmapStyle();
+                        break;
+                }
+
+                showNotification(`Tematik harita uygulandı!`, 'success');
+                toggleDemoMenu();
+            }, 300);
+        }
+
+        // Değer aralıklarına göre renklendirme
+        function applyQuantileColors() {
+            const layersWithValues = drawnLayers.filter(l => l.properties && l.properties.value !== undefined);
+
+            if (layersWithValues.length === 0) {
+                showNotification('Değer içeren katman bulunamadı!', 'warning');
+                return;
+            }
+
+            const values = layersWithValues.map(l => l.properties.value).sort((a, b) => a - b);
+            const colors = ['#313695', '#4575b4', '#91cf60', '#fee08b', '#fc8d59', '#d73027'];
+
+            layersWithValues.forEach(layerInfo => {
+                const value = layerInfo.properties.value;
+                const index = Math.floor((values.indexOf(value) / values.length) * colors.length);
+                const color = colors[Math.min(index, colors.length - 1)];
+
+                if (layerInfo.layer.setStyle) {
+                    layerInfo.layer.setStyle({
+                        fillColor: color,
+                        color: '#fff',
+                        weight: 2,
+                        fillOpacity: 0.7
+                    });
+                }
+            });
+        }
+
+        // Kategorik renklendirme
+        function applyCategoryColors() {
+            const categoryColors = {
+                'Park': '#2ecc71',
+                'Okul': '#3498db',
+                'Hastane': '#e74c3c',
+                'Alışveriş': '#f39c12',
+                'Spor Tesisi': '#9b59b6',
+                'Kültür Merkezi': '#16a085',
+                'default': '#95a5a6'
+            };
+
+            drawnLayers.forEach(layerInfo => {
+                if (layerInfo.properties && layerInfo.properties.category) {
+                    const color = categoryColors[layerInfo.properties.category] || categoryColors.default;
+
+                    if (layerInfo.layer.setStyle) {
+                        layerInfo.layer.setStyle({
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 2,
+                            fillOpacity: 0.8
+                        });
+                    }
+                }
+            });
+        }
+
+        // Isı haritası stili
+        function applyHeatmapStyle() {
+            const layersWithValues = drawnLayers.filter(l => l.properties && l.properties.value !== undefined);
+
+            if (layersWithValues.length === 0) {
+                showNotification('Değer içeren katman bulunamadı!', 'warning');
+                return;
+            }
+
+            const values = layersWithValues.map(l => l.properties.value);
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+
+            layersWithValues.forEach(layerInfo => {
+                const value = layerInfo.properties.value;
+                const normalized = (value - min) / (max - min);
+
+                // Soğuktan sıcağa gradient
+                const r = Math.floor(255 * normalized);
+                const b = Math.floor(255 * (1 - normalized));
+                const color = `rgb(${r}, 100, ${b})`;
+
+                if (layerInfo.layer.setStyle) {
+                    layerInfo.layer.setStyle({
+                        fillColor: color,
+                        color: '#fff',
+                        weight: 2,
+                        fillOpacity: 0.6,
+                        radius: 8 + normalized * 8 // Boyut da değere göre
+                    });
+                }
+            });
+        }
+
+        // Demo veriyi temizle
+        function clearDemoData() {
+            if (!confirm('Tüm demo verileri silinecek. Emin misiniz?')) {
+                return;
+            }
+
+            // Demo gruplarını ve katmanlarını bul
+            const demoGroups = document.querySelectorAll('[data-group-id^="demo-group-"]');
+
+            demoGroups.forEach(group => {
+                const groupId = group.getAttribute('data-group-id');
+
+                // Bu gruptaki katmanları haritadan kaldır
+                drawnLayers = drawnLayers.filter(layerInfo => {
+                    if (layerInfo.groupId === groupId) {
+                        map.removeLayer(layerInfo.layer);
+                        return false;
+                    }
+                    return true;
+                });
+
+                // Grubu DOM'dan kaldır
+                group.remove();
+            });
+
+            showNotification('Tüm demo verileri temizlendi', 'success');
+            toggleDemoMenu();
+        }
+
     </script>
     
     <!-- Proj4 kütüphanesi koordinat dönüşümleri için -->
