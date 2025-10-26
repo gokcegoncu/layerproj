@@ -174,6 +174,31 @@ async function initializeApplication() {
                 }
 
                 console.log('Feature created:', event.layerType, 'on layer:', layerId);
+
+                // Keep layer selected after drawing
+                // Re-select the layer to maintain selection highlight
+                if (layerId && layerId !== 'default-layer') {
+                    setTimeout(() => {
+                        const layerElement = document.querySelector(`[data-layer-id="${layerId}"]`);
+                        if (layerElement && !layerElement.classList.contains('selected-highlight')) {
+                            layerElement.classList.add('selected-highlight');
+                        }
+                    }, 100);
+                }
+
+                // For continuous point mode, restart drawing automatically
+                if (window.continuousPointMode && event.layerType === 'marker') {
+                    setTimeout(() => {
+                        const control = window.drawControl;
+                        if (control && control._toolbars && control._toolbars.draw) {
+                            const markerTool = control._toolbars.draw._modes.marker;
+                            if (markerTool && markerTool.handler) {
+                                markerTool.handler.enable();
+                                console.log('Continuous point mode: marker tool re-enabled');
+                            }
+                        }
+                    }, 50);
+                }
             });
         } else {
             console.warn('⚠️ Leaflet.Draw not loaded, drawing tools disabled');
