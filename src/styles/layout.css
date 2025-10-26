@@ -6,16 +6,25 @@
     display: flex;
     width: 100%;
     height: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
 }
 
 .left-panel {
     flex-shrink: 0;
+    height: 100%;
+    overflow: hidden;
 }
 
 .map-section {
     flex: 1;
     position: relative;
+    height: 100%;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* ============================================
@@ -24,6 +33,7 @@
 
 .layer-panel {
     width: 380px;
+    height: 100%;
     background: var(--bg-secondary);
     border-right: 1px solid var(--border-light);
     display: flex;
@@ -85,6 +95,9 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 #map {
@@ -92,6 +105,7 @@
     flex: 1;
     z-index: 1;
     height: 100%;
+    min-height: 0;
 }
 
 /* ============================================
@@ -345,6 +359,16 @@
 @media (max-width: 1200px) {
     .main-container {
         flex-direction: column;
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    .left-panel {
+        width: 100%;
+        height: auto;
+        max-height: 250px;
+        order: 2;
     }
 
     .sidebar {
@@ -353,10 +377,24 @@
         order: 2;
     }
 
+    .map-section {
+        order: 1;
+        flex: 1;
+        overflow: hidden;
+    }
+
     .map-container {
         width: 100%;
-        height: 60vh;
+        flex: 1;
+        height: 100%;
+        min-height: 0;
         order: 1;
+    }
+
+    #map {
+        flex: 1;
+        height: 100%;
+        min-height: 0;
     }
 
     .map-tools-container {
@@ -377,13 +415,15 @@
     .main-container {
         flex-direction: column;
         height: 100vh;
+        min-height: 100vh;
         overflow: hidden;
     }
 
     .left-panel {
         width: 100%;
+        height: auto;
         min-height: 180px;
-        max-height: 200px;
+        max-height: 220px;
         order: 2;
         overflow-y: auto;
         flex-shrink: 0;
@@ -395,6 +435,19 @@
         order: 1;
         flex: 1;
         height: auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .map-container {
+        flex: 1;
+        height: 100%;
+        min-height: 0;
+    }
+
+    #map {
+        flex: 1;
+        height: 100%;
         min-height: 0;
     }
 
@@ -433,13 +486,15 @@
     .main-container {
         flex-direction: column;
         height: 100vh;
+        min-height: 100vh;
         overflow: hidden;
     }
 
     .left-panel {
         width: 100%;
+        height: auto;
         min-height: 120px;
-        max-height: 150px;
+        max-height: 180px;
         order: 2;
         overflow-y: auto;
         flex-shrink: 0;
@@ -452,6 +507,7 @@
         flex: 1;
         height: auto;
         min-height: 0;
+        overflow: hidden;
     }
 
     .sidebar {
@@ -459,7 +515,15 @@
     }
 
     .map-container {
-        height: 50vh;
+        flex: 1;
+        height: 100%;
+        min-height: 0;
+    }
+
+    #map {
+        flex: 1;
+        height: 100%;
+        min-height: 0;
     }
 
     .right-toolbar {
