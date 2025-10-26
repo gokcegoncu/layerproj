@@ -2,6 +2,151 @@
 
 Tüm önemli değişiklikler bu dosyada belgelenmektedir.
 
+## [3.9.0] - 2025-10-26
+
+### 🐛 Kritik Hata Düzeltmeleri
+
+Kullanıcı tarafından bildirilen 3 önemli sorun çözüldü.
+
+### 🆕 Düzeltilen Sorunlar
+
+#### 1. Çizim Yaparken Katman Karışıklığı
+
+**Sorun:** Seçili katmanda çizim yaparken bazen farklı katmanlara geçiyordu.
+
+**Çözüm:**
+- `addFeatureToActiveLayer()` fonksiyonu şimdi `featureInfo` return ediyor
+- `draw:created` event'inde return edilen featureInfo kullanılıyor
+- Sağ tık menüsü event'leri doğru feature'a bağlanıyor
+- `activeLayerId` tutarlı şekilde kullanılıyor
+
+#### 2. Rastgele İsim Atama → Alan Bazlı Değer Atama
+
+**Sorun:** Etiket sekmesinde "Rastgele İsimler Ata" butonu vardı ama kullanıcı seçili alana göre değer ataması istiyordu.
+
+**Çözüm:**
+- "🎲 Rastgele İsimler Ata" → "📊 Seçili Alana Değer Ata"
+- `assignFieldValues()` yeni fonksiyon:
+  - `labelField` select değerine göre çalışır
+  - **name**: Tip + numara ("Nokta 1", "Çizgi 2")
+  - **area**: Poligonlar için alan hesaplar (m²)
+  - **length**: Çizgiler için uzunluk hesaplar (m)
+  - **id**: Feature ID'sini kullanır
+  - **type**: Feature tipini kullanır
+- Alan ve uzunluk değerleri otomatik olarak `value` alanına da atanır (heatmap için)
+- Backward compatibility: `generateRandomNames()` hala çalışıyor
+
+#### 3. Isı Haritası Ayarları Tema Sekmesine Taşındı
+
+**Sorun:** Sol panelde ayrı bir "Isı Haritası" butonu vardı, kullanıcı tema ayarlarında olmasını istiyordu.
+
+**Çözüm:**
+- Sol panel butonu kaldırıldı
+- Tema sekmesine "🔥 Isı Haritası (Heatmap)" seçeneği eklendi
+- **Heatmap Parametreleri:**
+  - Yarıçap: 10-100px (varsayılan: 50px)
+  - Bulanıklık: 5-50px (varsayılan: 35px)
+- Kullanım talimatı eklendi
+- `applyHeatmapVisualization()` - Tema sekmesinden heatmap göster
+- `removeHeatmapVisualization()` - Heatmap kaldır
+- `createHeatmapLayer(radius, blur)` - Parametreler eklendi
+
+### 🎨 UI İyileştirmeleri
+
+**Etiket Sekmesi:**
+```
+Etiket Alanı: [Seçiniz ▼]
+  - İsim
+  - ID
+  - Tip
+  - Alan (m²)
+  - Uzunluk (m)
+
+[📊 Seçili Alana Değer Ata]
+Yukarıdaki "Etiket Alanı"na göre otomatik değer atar
+```
+
+**Tema Sekmesi:**
+```
+Sembol Tipi: [Seçiniz ▼]
+  - Tek Sembol
+  - Kategorik
+  - Değer Aralıkları
+  - 🔥 Isı Haritası  ← YENİ!
+
+(Isı Haritası seçildiğinde)
+Yarıçap: [━━━━●━━━] 50px
+Bulanıklık: [━━━━●━━━] 35px
+
+[🔥 Isı Haritası Göster]
+[❌ Isı Haritasını Kaldır]
+```
+
+### 📊 Teknik Detaylar
+
+#### Değiştirilen Fonksiyonlar
+
+```javascript
+// addFeatureToActiveLayer artık featureInfo return ediyor
+function addFeatureToActiveLayer(type, layer, typeName) {
+    // ... kod ...
+    const featureInfo = { id, layer, type, layerId, groupId, properties };
+    drawnLayers.push(featureInfo);
+    return featureInfo; // ← YENİ
+}
+
+// draw:created event'inde kullanım
+map.on('draw:created', function(e) {
+    const featureInfo = addFeatureToActiveLayer(type, layer, typeName);
+
+    // Sağ tık menüsü ekle
+    featureInfo.layer.on('contextmenu', function(e) {
+        showContextMenu(e, featureInfo);
+    });
+});
+```
+
+#### Yeni Fonksiyonlar
+
+- `assignFieldValues()` - Seçili alana göre değer atar
+- `applyHeatmapVisualization()` - UI'dan heatmap parametreleriyle oluşturur
+- `removeHeatmapVisualization()` - Heatmap'i kaldırır
+
+#### Güncellenen Fonksiyonlar
+
+- `createHeatmapLayer(radius, blur)` - Artık parametreler alıyor
+- `onSymbologyModeChange()` - Heatmap mode'u eklendi
+
+### ✅ Kullanım Senaryosu
+
+**Senaryo:** Alan bazlı ısı haritası oluşturmak
+
+1. **Poligonlar Çizin:**
+   - Haritada birkaç poligon çizin
+
+2. **Alan Değerlerini Atayın:**
+   - Stil modal → Etiket sekmesi
+   - Etiket Alanı: "Alan (m²)" seçin
+   - "📊 Seçili Alana Değer Ata" butonuna tıklayın
+   - Otomatik olarak alan hesaplanır ve `value` alanına atanır
+
+3. **Isı Haritası Gösterin:**
+   - Tema sekmesine geçin
+   - Sembol Tipi: "🔥 Isı Haritası" seçin
+   - Yarıçap ve Bulanıklığı ayarlayın
+   - "🔥 Isı Haritası Göster" butonuna tıklayın
+   - Bulut renk dağılımı görünür!
+
+### 🎯 Avantajlar
+
+- ✅ Çizim tutarlı şekilde doğru katmana ekleniyor
+- ✅ Alan ve uzunluk otomatik hesaplanıyor
+- ✅ Heatmap ayarları merkezi bir yerde
+- ✅ Daha profesyonel GIS workflow
+- ✅ Parametrik heatmap kontrolü
+
+---
+
 ## [3.8.0] - 2025-10-26
 
 ### 🚀 MAJOR UPDATE: Real GIS Features
