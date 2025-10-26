@@ -120,6 +120,12 @@ function initializeApplication() {
             window.map.addControl(window.drawControl);
             console.log('✅ Draw control added to map');
 
+            // Initialize drawing tools module with map and control
+            if (DrawingTools.initializeDrawingTools) {
+                DrawingTools.initializeDrawingTools(window.map, window.drawControl);
+                console.log('✅ Drawing tools module initialized');
+            }
+
             // Setup draw event handlers
             window.map.on(L.Draw.Event.CREATED, function (event) {
                 const layer = event.layer;
