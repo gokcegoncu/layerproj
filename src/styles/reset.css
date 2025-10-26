@@ -14,14 +14,22 @@
                 color var(--transition-base);
 }
 
+/* HTML & Body Full Height */
+html {
+    height: 100%;
+    overflow: hidden;
+}
+
 /* Body Styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    height: 100vh;
+    height: 100%;
+    min-height: 100vh;
     display: flex;
     overflow: hidden;
     background: var(--bg-primary);
     color: var(--text-primary);
+    position: relative;
 }
 
 /* ============================================
