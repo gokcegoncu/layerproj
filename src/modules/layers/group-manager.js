@@ -3,6 +3,8 @@
  * Handles group CRUD operations, expansion/collapse, and visibility
  */
 
+import * as DB from '../storage/database.js';
+
 let activeGroupId = null;
 
 /**
@@ -43,6 +45,10 @@ export function createGroup(groupName) {
         `;
 
         groupContainer.appendChild(layerGroup);
+
+        // Save group to database
+        const groupPosition = groupContainer.children.length;
+        DB.createGroup(groupId, groupName, groupPosition);
 
         // Select the new group
         selectGroup(layerGroup.querySelector('.group-select-area'));
@@ -326,6 +332,9 @@ export function deleteGroup(groupId) {
 
         // Remove group
         group.remove();
+
+        // Delete from database
+        DB.deleteGroup(groupId);
 
         // Clear active group if this was it
         if (activeGroupId === groupId) {
