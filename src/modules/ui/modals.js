@@ -300,6 +300,26 @@ export function showCreateGroupModal() {
     if (modal) {
         modal.setAttribute('data-create-type', 'group');
     }
+
+    // Hide group select row for group creation
+    const groupSelectRow = document.getElementById('groupSelectRow');
+    if (groupSelectRow) {
+        groupSelectRow.style.display = 'none';
+    }
+
+    // Update modal title
+    const modalTitle = document.getElementById('createModalTitle');
+    if (modalTitle) {
+        modalTitle.textContent = 'Yeni Grup Oluştur';
+    }
+
+    // Clear input
+    const nameInput = document.getElementById('createNameInput');
+    if (nameInput) {
+        nameInput.value = '';
+        nameInput.placeholder = 'Grup adı giriniz...';
+        setTimeout(() => nameInput.focus(), 100);
+    }
 }
 
 /**
@@ -311,6 +331,49 @@ export function showCreateLayerModal() {
     const modal = document.getElementById('createModal');
     if (modal) {
         modal.setAttribute('data-create-type', 'layer');
+    }
+
+    // Show and populate group select
+    const groupSelectRow = document.getElementById('groupSelectRow');
+    const groupSelect = document.getElementById('targetGroupSelect');
+
+    if (groupSelectRow) {
+        groupSelectRow.style.display = 'block';
+    }
+
+    if (groupSelect) {
+        // Clear existing options
+        groupSelect.innerHTML = '';
+
+        // Get all groups
+        const groups = document.querySelectorAll('.layer-group');
+        if (groups.length === 0) {
+            groupSelect.innerHTML = '<option value="">Önce bir grup oluşturun</option>';
+        } else {
+            groups.forEach(group => {
+                const groupId = group.getAttribute('data-group-id');
+                const groupName = group.querySelector('.group-name')?.textContent || 'İsimsiz Grup';
+
+                const option = document.createElement('option');
+                option.value = groupId;
+                option.textContent = groupName;
+                groupSelect.appendChild(option);
+            });
+        }
+    }
+
+    // Update modal title
+    const modalTitle = document.getElementById('createModalTitle');
+    if (modalTitle) {
+        modalTitle.textContent = 'Yeni Katman Oluştur';
+    }
+
+    // Clear input
+    const nameInput = document.getElementById('createNameInput');
+    if (nameInput) {
+        nameInput.value = '';
+        nameInput.placeholder = 'Katman adı giriniz...';
+        setTimeout(() => nameInput.focus(), 100);
     }
 }
 

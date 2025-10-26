@@ -758,7 +758,7 @@
     border-radius: var(--radius-xl);
     width: 480px;
     max-height: 90vh;
-    overflow: hidden;
+    overflow: visible; /* Allow modal-body to scroll */
     display: flex;
     flex-direction: column;
     cursor: move;

@@ -588,7 +588,71 @@ function handleAction(action, element, event) {
             break;
         case 'confirm-create':
             console.log('Confirm create');
-            // Create logic would go here
+
+            // Get modal and determine create type
+            const createModal = document.getElementById('createModal');
+            if (!createModal) {
+                console.error('Create modal not found');
+                return;
+            }
+
+            const createType = createModal.getAttribute('data-create-type');
+            const nameInput = document.getElementById('createNameInput');
+
+            if (!nameInput || !nameInput.value.trim()) {
+                alert('⚠️ Lütfen bir isim girin!');
+                return;
+            }
+
+            const name = nameInput.value.trim();
+
+            if (createType === 'group') {
+                // Create group
+                const groupId = GroupManager.createGroup(name);
+                if (groupId) {
+                    console.log(`✅ Group created: ${groupId}`);
+                    createModal.style.display = 'none';
+                    nameInput.value = '';
+
+                    // Show success message
+                    if (Console && Console.logToConsole) {
+                        Console.logToConsole(`Grup oluşturuldu: ${name}`, 'success');
+                    }
+                } else {
+                    alert('❌ Grup oluşturulamadı!');
+                }
+            } else if (createType === 'layer') {
+                // Create layer
+                const groupSelect = document.getElementById('targetGroupSelect');
+                if (!groupSelect || !groupSelect.value) {
+                    alert('⚠️ Lütfen bir grup seçin!');
+                    return;
+                }
+
+                const groupId = groupSelect.value;
+                const layerId = LayerManager.createLayer(name, groupId);
+
+                if (layerId) {
+                    console.log(`✅ Layer created: ${layerId}`);
+                    createModal.style.display = 'none';
+                    nameInput.value = '';
+
+                    // Update group layer count
+                    if (GroupManager.updateGroupLayerCount) {
+                        GroupManager.updateGroupLayerCount(groupId);
+                    }
+
+                    // Show success message
+                    if (Console && Console.logToConsole) {
+                        Console.logToConsole(`Katman oluşturuldu: ${name}`, 'success');
+                    }
+                } else {
+                    alert('❌ Katman oluşturulamadı!');
+                }
+            } else {
+                console.error('Unknown create type:', createType);
+                alert('❌ Hatalı işlem tipi!');
+            }
             break;
 
         // Style modal tab switching
