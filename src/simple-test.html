@@ -26,10 +26,61 @@
     }
     .log { margin: 2px 0; }
     .error { color: #ff0000; }
+
+    /* Color palette legend */
+    #colorPalette {
+      position: fixed;
+      bottom: 30px;
+      left: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+      display: none;
+    }
+    #colorPalette h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .gradient-bar {
+      width: 200px;
+      height: 30px;
+      background: linear-gradient(to right,
+        blue 0%,
+        cyan 20%,
+        lime 40%,
+        yellow 60%,
+        orange 80%,
+        red 100%);
+      border-radius: 4px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .gradient-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #666;
+    }
   </style>
 </head>
 <body>
     <div id="console"></div>
+
+    <!-- Color Palette Legend -->
+    <div id="colorPalette">
+        <h3>🌡️ Isı Haritası - Renk Paleti</h3>
+        <div class="gradient-bar"></div>
+        <div class="gradient-labels">
+            <span>Düşük (0)</span>
+            <span>Orta (50)</span>
+            <span>Yüksek (100)</span>
+        </div>
+    </div>
+
     <div class="main-container">
         <div class="layer-panel">
             <div class="panel-header">
@@ -175,7 +226,7 @@
                 return;
             }
 
-            log('🔥 Creating heatmap...');
+            log('🔥 Creating ENHANCED heatmap...');
 
             // Remove old heatmap
             if (window.heatmapLayer) {
@@ -191,15 +242,19 @@
 
             // Prepare data: [lat, lng, intensity]
             const heatData = window.demoPoints.map(p => [p.lat, p.lng, p.value]);
+            const maxValue = Math.max(...window.demoPoints.map(p => p.value));
+            const minValue = Math.min(...window.demoPoints.map(p => p.value));
 
             log(`📊 Heatmap data prepared: ${heatData.length} points`);
+            log(`📊 Value range: ${minValue} - ${maxValue}`);
 
-            // Create heatmap
+            // Create heatmap with ENHANCED settings for better visibility
             window.heatmapLayer = L.heatLayer(heatData, {
-                radius: 40,
-                blur: 30,
+                radius: 60,        // Increased from 40 (larger heat circles)
+                blur: 40,          // Increased from 30 (smoother gradients)
                 maxZoom: 17,
-                max: Math.max(...window.demoPoints.map(p => p.value)),
+                max: maxValue * 0.5,  // Lower max = MORE intense colors
+                minOpacity: 0.4,   // Minimum opacity for better visibility
                 gradient: {
                     0.0: 'blue',
                     0.2: 'cyan',
@@ -213,16 +268,25 @@
             // Add to map
             window.heatmapLayer.addTo(window.map);
 
-            log('✅ Heatmap created successfully!');
-            log('🔥 Radius: 40px, Blur: 30px');
-            log('🌈 Gradient: Blue → Cyan → Lime → Yellow → Orange → Red');
+            // Show color palette
+            document.getElementById('colorPalette').style.display = 'block';
+
+            log('✅ ENHANCED Heatmap created successfully!');
+            log('🔥 Radius: 60px, Blur: 40px (DAHA BELİRGİN!)');
+            log('🌈 Gradient: Mavi → Camgöbeği → Yeşil → Sarı → Turuncu → Kırmızı');
+            log('📊 Renk paleti sol altta görünüyor!');
         };
 
         window.removeHeatmap = () => {
             if (window.heatmapLayer) {
                 window.map.removeLayer(window.heatmapLayer);
                 window.heatmapLayer = null;
+
+                // Hide color palette
+                document.getElementById('colorPalette').style.display = 'none';
+
                 log('✅ Heatmap removed');
+                log('📊 Renk paleti gizlendi');
             } else {
                 log('⚠️ No heatmap to remove');
             }
