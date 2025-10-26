@@ -106,11 +106,15 @@ export function applyLabels(layerId) {
             `;
 
             // Remove any existing tooltip first
+            if (layer._customTooltip) {
+                window.map.removeLayer(layer._customTooltip);
+                layer._customTooltip = null;
+            }
             if (layer.getTooltip()) {
                 layer.unbindTooltip();
             }
 
-            // Create and bind tooltip with proper positioning
+            // Create standalone tooltip with explicit position
             const tooltip = L.tooltip({
                 permanent: true,
                 direction: 'center',
@@ -118,14 +122,12 @@ export function applyLabels(layerId) {
                 opacity: 1,
                 offset: [0, 0]
             })
+            .setLatLng(labelLatLng)
             .setContent(labelText)
-            .setLatLng(labelLatLng);
+            .addTo(window.map);
 
-            // Bind to layer
-            layer.bindTooltip(tooltip);
-
-            // Add to map
-            tooltip.addTo(window.map);
+            // Store reference on layer for cleanup
+            layer._customTooltip = tooltip;
 
             // Apply custom styles
             setTimeout(() => {
@@ -136,6 +138,10 @@ export function applyLabels(layerId) {
             }, 50);
         } else {
             // Remove tooltip
+            if (layer._customTooltip) {
+                window.map.removeLayer(layer._customTooltip);
+                layer._customTooltip = null;
+            }
             if (layer.unbindTooltip) {
                 layer.unbindTooltip();
             }
@@ -164,8 +170,19 @@ export function removeLabels(layerId) {
 
     layerFeatures.forEach(feature => {
         const featureInfo = window.drawnLayers.find(f => f.id === feature.id);
-        if (featureInfo && featureInfo.layer && featureInfo.layer.unbindTooltip) {
-            featureInfo.layer.unbindTooltip();
+        if (featureInfo && featureInfo.layer) {
+            const layer = featureInfo.layer;
+
+            // Remove custom tooltip
+            if (layer._customTooltip) {
+                window.map.removeLayer(layer._customTooltip);
+                layer._customTooltip = null;
+            }
+
+            // Remove bound tooltip
+            if (layer.unbindTooltip) {
+                layer.unbindTooltip();
+            }
         }
     });
 }
