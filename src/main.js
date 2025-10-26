@@ -58,27 +58,46 @@ function initializeApplication() {
     console.log('🚀 Initializing CBS GIS Application...');
 
     try {
+        // Check if map div exists
+        const mapDiv = document.getElementById('map');
+        if (!mapDiv) {
+            throw new Error('Map container element not found! (#map)');
+        }
+        console.log('✅ Map container found:', mapDiv);
+
         // 1. Initialize map
         console.log('📍 Initializing map...');
         window.map = initializeMap('map');
+        if (!window.map) {
+            throw new Error('Map initialization returned null');
+        }
+        console.log('✅ Map initialized:', window.map);
+
         window.drawnItems = createDrawnItemsLayer(window.map);
+        if (!window.drawnItems) {
+            throw new Error('Drawn items layer initialization failed');
+        }
+        console.log('✅ Drawn items layer created');
 
         // 2. Setup coordinate and scale displays
         console.log('🗺️ Setting up coordinate system...');
         setupCoordinateDisplay(window.map);
         setupScaleDisplay(window.map);
         setupProjectionSystem();
+        console.log('✅ Coordinate system configured');
 
         // 3. Initialize measurement tools
         console.log('📏 Initializing measurement tools...');
         if (Measurement.initMeasurementTools) {
             window.measurementTools = Measurement.initMeasurementTools(window.map);
+            console.log('✅ Measurement tools initialized');
         }
 
         // 4. Initialize message console
         console.log('💬 Initializing message console...');
         if (Console.initConsole) {
             Console.initConsole();
+            console.log('✅ Message console initialized');
         }
 
         // 5. Setup drawing controls (Leaflet.Draw)
@@ -99,6 +118,7 @@ function initializeApplication() {
                 }
             });
             window.map.addControl(window.drawControl);
+            console.log('✅ Draw control added to map');
 
             // Setup draw event handlers
             window.map.on(L.Draw.Event.CREATED, function (event) {
@@ -123,13 +143,19 @@ function initializeApplication() {
         // 6. Setup event listeners
         console.log('🎯 Setting up event listeners...');
         setupEventListeners();
+        console.log('✅ Event listeners configured');
 
         // 7. Initialize UI components
         console.log('🎨 Initializing UI components...');
         initializeUIComponents();
+        console.log('✅ UI components initialized');
 
         // 8. Invalidate map size after initialization
-        invalidateMapSize(window.map);
+        console.log('📐 Invalidating map size...');
+        setTimeout(() => {
+            invalidateMapSize(window.map);
+            console.log('✅ Map size invalidated');
+        }, 100);
 
         // 9. Setup window resize handler
         window.addEventListener('resize', () => {
@@ -137,10 +163,13 @@ function initializeApplication() {
         });
 
         console.log('✅ Application initialized successfully!');
+        console.log('🗺️ Map should now be visible at:', mapDiv);
 
     } catch (error) {
         console.error('❌ Application initialization failed:', error);
-        alert('Failed to initialize application. Please check console for details.');
+        console.error('Error stack:', error.stack);
+        alert('Uygulama başlatılamadı!\n\nHata: ' + error.message + '\n\nLütfen konsolu kontrol edin ve sayfayı yenileyin.');
+        throw error; // Re-throw to see in console
     }
 }
 
@@ -707,10 +736,31 @@ window.Coordinates = Coordinates;
  * Wait for external libraries to load
  */
 function waitForExternalLibraries() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 100; // 5 seconds total
+
         const checkLibraries = () => {
+            attempts++;
+            console.log(`⏳ Checking libraries (attempt ${attempts}/${maxAttempts})...`, {
+                L: !!window.L,
+                'L.Control': !!(window.L && window.L.Control),
+                'L.Control.Draw': !!(window.L && window.L.Control && window.L.Control.Draw),
+                proj4: !!window.proj4
+            });
+
             if (window.L && window.L.Control && window.L.Control.Draw && window.proj4) {
+                console.log('✅ All libraries loaded successfully!');
                 resolve();
+            } else if (attempts >= maxAttempts) {
+                console.error('❌ Libraries failed to load after', attempts, 'attempts');
+                console.error('Missing:', {
+                    L: !window.L,
+                    'L.Control': !(window.L && window.L.Control),
+                    'L.Control.Draw': !(window.L && window.L.Control && window.L.Control.Draw),
+                    proj4: !window.proj4
+                });
+                reject(new Error('External libraries failed to load'));
             } else {
                 setTimeout(checkLibraries, 50);
             }
@@ -723,13 +773,27 @@ function waitForExternalLibraries() {
  * Initialize application when DOM and libraries are ready
  */
 async function init() {
-    await waitForExternalLibraries();
-    initializeApplication();
+    console.log('🎬 Starting application initialization...');
+
+    try {
+        console.log('⏳ Waiting for external libraries...');
+        await waitForExternalLibraries();
+        console.log('✅ External libraries loaded');
+
+        console.log('🚀 Initializing application...');
+        initializeApplication();
+        console.log('✅ Application initialized successfully');
+    } catch (error) {
+        console.error('❌ Failed to initialize application:', error);
+        alert('Uygulama başlatılamadı. Lütfen sayfayı yenileyin.\n\nHata: ' + error.message);
+    }
 }
 
 if (document.readyState === 'loading') {
+    console.log('📄 Waiting for DOM content to load...');
     document.addEventListener('DOMContentLoaded', init);
 } else {
+    console.log('📄 DOM already loaded, starting init...');
     init();
 }
 
