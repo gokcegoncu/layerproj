@@ -12,11 +12,11 @@ let heatmapActive = false;
 
 /**
  * Create heatmap layer using Leaflet.heat
- * @param {number} radius - Heat radius in pixels
- * @param {number} blur - Blur amount
+ * @param {number} radius - Heat radius in pixels (default: 60 for better visibility)
+ * @param {number} blur - Blur amount (default: 40 for smoother gradients)
  * @returns {L.HeatLayer|null} - Created heatmap layer or null
  */
-export function createHeatmapLayer(radius = 50, blur = 35) {
+export function createHeatmapLayer(radius = 60, blur = 40) {
     // Remove old heatmap if exists
     if (heatmapLayer && window.map && window.map.hasLayer(heatmapLayer)) {
         window.map.removeLayer(heatmapLayer);
@@ -58,12 +58,15 @@ export function createHeatmapLayer(radius = 50, blur = 35) {
         return null;
     }
 
-    // Create heatmap layer
+    // Create heatmap layer with enhanced visibility
+    const maxValue = Math.max(...heatData.map(d => d[2]));
+
     heatmapLayer = L.heatLayer(heatData, {
         radius: radius,
         blur: blur,
         maxZoom: 17,
-        max: Math.max(...heatData.map(d => d[2])),
+        max: maxValue * 0.5,  // Lower max = MORE intense colors
+        minOpacity: 0.4,      // Minimum opacity for better visibility
         gradient: {
             0.0: 'blue',
             0.2: 'cyan',
@@ -78,7 +81,7 @@ export function createHeatmapLayer(radius = 50, blur = 35) {
         heatmapLayer.addTo(window.map);
     }
 
-    showNotification(`🔥 Heatmap created! (${pointsWithValue.length} points, radius: ${radius}px, blur: ${blur}px)`, 'success');
+    showNotification(`🔥 Isı Haritası Oluşturuldu! (${pointsWithValue.length} nokta, yarıçap: ${radius}px, bulanıklık: ${blur}px)`, 'success');
     heatmapActive = true;
 
     return heatmapLayer;
