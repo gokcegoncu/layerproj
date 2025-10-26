@@ -36,20 +36,33 @@ export function applyLabels(layerId) {
             // Get label text from properties
             let labelText = '';
 
-            if (featureInfo.properties && featureInfo.properties[labelField]) {
+            // Debug: log properties
+            console.log(`Feature ${feature.id} properties:`, featureInfo.properties);
+
+            if (featureInfo.properties && featureInfo.properties[labelField] !== undefined) {
+                // Found the property value
                 labelText = String(featureInfo.properties[labelField]);
             } else if (labelField === 'id') {
+                // Use feature ID
                 labelText = featureInfo.id;
             } else if (labelField === 'type') {
+                // Use geometry type
                 labelText = feature.type || 'Unknown';
             } else if (labelField === 'area' && layer.getLatLngs) {
                 // Calculate area for polygons (very rough estimate)
-                labelText = 'Area';
+                try {
+                    const area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+                    labelText = `${Math.round(area)} m²`;
+                } catch {
+                    labelText = 'Area';
+                }
             } else if (labelField === 'length' && layer.getLatLngs) {
                 // Calculate length for lines
                 labelText = 'Length';
             } else {
-                labelText = 'No value';
+                // No value found - show field name for debugging
+                labelText = `[${labelField}]`;
+                console.warn(`No value for field "${labelField}" in feature ${feature.id}`);
             }
 
             // Create tooltip style

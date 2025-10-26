@@ -736,7 +736,59 @@ function handleAction(action, element, event) {
                 Console.logToConsole(`✅ ${successCount} özelliğe otomatik değer atandı`, 'success');
             }
 
-            alert(`✅ ${successCount} özelliğe otomatik değer atandı!\n\nNokta: ${counts.point}\nÇizgi: ${counts.line}\nPoligon: ${counts.polygon}`);
+            // Close assignment modal
+            const assignModal = document.getElementById('attributeEditorModal');
+            if (assignModal) {
+                assignModal.style.display = 'none';
+            }
+
+            // Show success and offer to show labels
+            const showLabelsNow = confirm(
+                `✅ ${successCount} özelliğe otomatik değer atandı!\n\n` +
+                `Nokta: ${counts.point}\nÇizgi: ${counts.line}\nPoligon: ${counts.polygon}\n\n` +
+                `Etiketleri haritada göstermek ister misiniz?`
+            );
+
+            if (showLabelsNow) {
+                // Open style modal to labels tab
+                if (StyleManager.openStyleModal) {
+                    StyleManager.openStyleModal();
+                }
+
+                // Switch to label tab
+                setTimeout(() => {
+                    const labelTab = document.querySelector('[data-action="switch-tab:label"]');
+                    if (labelTab) {
+                        labelTab.click();
+                    }
+
+                    // Auto-enable labels with the assigned field
+                    const showLabelsCheckbox = document.getElementById('showLabels');
+                    const labelFieldSelect = document.getElementById('labelField');
+
+                    if (showLabelsCheckbox && labelFieldSelect) {
+                        showLabelsCheckbox.checked = true;
+
+                        // Select appropriate label field based on assignment type
+                        if (fieldType === 'name') {
+                            labelFieldSelect.value = 'name';
+                        } else if (fieldType === 'value') {
+                            labelFieldSelect.value = 'value';
+                        } else if (fieldType === 'category') {
+                            labelFieldSelect.value = 'category';
+                        } else if (fieldType === 'sequential') {
+                            labelFieldSelect.value = 'name'; // Sequential creates name field
+                        }
+
+                        // Apply labels immediately
+                        LabelManager.applyLabels(layerId);
+
+                        if (Console && Console.logToConsole) {
+                            Console.logToConsole('✅ Etiketler gösteriliyor', 'success');
+                        }
+                    }
+                }, 300);
+            }
             break;
         }
         case 'delete-feature-from-context':
