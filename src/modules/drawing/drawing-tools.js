@@ -53,6 +53,7 @@ export function startDrawing(type) {
                 activeLayerId = window.activeLayerId;
             } else {
                 console.error('No active layer selected');
+                alert('⚠️ Lütfen önce bir katman seçin!');
                 return;
             }
         }
@@ -60,13 +61,30 @@ export function startDrawing(type) {
         // Store active layer ID for drawing
         window.drawingActiveLayerId = window.activeLayerId;
 
+        // Use window.drawControl if local drawControl is not set
+        const control = drawControl || window.drawControl;
+
+        // Check if drawControl exists
+        if (!control) {
+            console.error('drawControl not initialized');
+            alert('❌ Çizim araçları yüklenemedi. Sayfayı yenileyin.');
+            return;
+        }
+
+        // Check if drawControl has required structure
+        if (!control._toolbars || !control._toolbars.draw || !control._toolbars.draw._modes) {
+            console.error('drawControl structure invalid:', control);
+            alert('❌ Çizim araçları hatalı. Sayfayı yenileyin.');
+            return;
+        }
+
         // Map type to Leaflet Draw handlers
         const drawHandlers = {
-            'marker': drawControl._toolbars.draw._modes.marker,
-            'polyline': drawControl._toolbars.draw._modes.polyline,
-            'polygon': drawControl._toolbars.draw._modes.polygon,
-            'rectangle': drawControl._toolbars.draw._modes.rectangle,
-            'circle': drawControl._toolbars.draw._modes.circle
+            'marker': control._toolbars.draw._modes.marker,
+            'polyline': control._toolbars.draw._modes.polyline,
+            'polygon': control._toolbars.draw._modes.polygon,
+            'rectangle': control._toolbars.draw._modes.rectangle,
+            'circle': control._toolbars.draw._modes.circle
         };
 
         // Get appropriate handler
@@ -97,13 +115,15 @@ export function startDrawing(type) {
  */
 export function stopDrawing() {
     try {
-        if (drawControl && drawControl._toolbars && drawControl._toolbars.draw) {
+        const control = drawControl || window.drawControl;
+
+        if (control && control._toolbars && control._toolbars.draw) {
             const drawHandlers = {
-                'marker': drawControl._toolbars.draw._modes.marker,
-                'polyline': drawControl._toolbars.draw._modes.polyline,
-                'polygon': drawControl._toolbars.draw._modes.polygon,
-                'rectangle': drawControl._toolbars.draw._modes.rectangle,
-                'circle': drawControl._toolbars.draw._modes.circle
+                'marker': control._toolbars.draw._modes.marker,
+                'polyline': control._toolbars.draw._modes.polyline,
+                'polygon': control._toolbars.draw._modes.polygon,
+                'rectangle': control._toolbars.draw._modes.rectangle,
+                'circle': control._toolbars.draw._modes.circle
             };
 
             Object.values(drawHandlers).forEach(mode => {
