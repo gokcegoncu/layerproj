@@ -29,8 +29,8 @@ export function createPoint(latlng, options = {}) {
     const marker = L.marker(latlng, defaultOptions);
 
     // Add to drawn items layer group
-    if (state.drawnItems) {
-        state.drawnItems.addLayer(marker);
+    if (window.drawnItems) {
+        window.drawnItems.addLayer(marker);
     }
 
     return marker;
@@ -55,8 +55,8 @@ export function createLine(latlngs, options = {}) {
     const polyline = L.polyline(latlngs, defaultOptions);
 
     // Add to drawn items layer group
-    if (state.drawnItems) {
-        state.drawnItems.addLayer(polyline);
+    if (window.drawnItems) {
+        window.drawnItems.addLayer(polyline);
     }
 
     return polyline;
@@ -81,8 +81,8 @@ export function createPolygon(latlngs, options = {}) {
     const polygon = L.polygon(latlngs, defaultOptions);
 
     // Add to drawn items layer group
-    if (state.drawnItems) {
-        state.drawnItems.addLayer(polygon);
+    if (window.drawnItems) {
+        window.drawnItems.addLayer(polygon);
     }
 
     return polygon;
@@ -107,8 +107,8 @@ export function createRectangle(bounds, options = {}) {
     const rectangle = L.rectangle(bounds, defaultOptions);
 
     // Add to drawn items layer group
-    if (state.drawnItems) {
-        state.drawnItems.addLayer(rectangle);
+    if (window.drawnItems) {
+        window.drawnItems.addLayer(rectangle);
     }
 
     return rectangle;
@@ -134,8 +134,8 @@ export function createCircle(center, options = {}) {
     const circle = L.circle(center, defaultOptions);
 
     // Add to drawn items layer group
-    if (state.drawnItems) {
-        state.drawnItems.addLayer(circle);
+    if (window.drawnItems) {
+        window.drawnItems.addLayer(circle);
     }
 
     return circle;
@@ -161,8 +161,8 @@ export function createCircleMarker(latlng, options = {}) {
     const circleMarker = L.circleMarker(latlng, defaultOptions);
 
     // Add to drawn items layer group
-    if (state.drawnItems) {
-        state.drawnItems.addLayer(circleMarker);
+    if (window.drawnItems) {
+        window.drawnItems.addLayer(circleMarker);
     }
 
     return circleMarker;
@@ -420,8 +420,8 @@ export function createFromGeoJSON(geojson, options = {}) {
         });
 
         // Add to drawn items layer group
-        if (state.drawnItems && layer) {
-            state.drawnItems.addLayer(layer);
+        if (window.drawnItems && layer) {
+            window.drawnItems.addLayer(layer);
         }
 
         return layer;

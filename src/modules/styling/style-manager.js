@@ -28,10 +28,10 @@ export function showStyleModal(layerId) {
     }
 
     // Set active layer
-    state.activeLayerId = layerId;
+    window.activeLayerId = layerId;
 
     // Detect layer type
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
     let layerType = null;
 
     if (layerFeatures.length > 0) {
@@ -73,7 +73,7 @@ export function openStyleModal(type, featureId) {
 
     // Use active layer as fallback
     if (!layerId) {
-        layerId = state.activeLayerId;
+        layerId = window.activeLayerId;
     }
 
     console.log('OpenStyleModal - Determined layerId:', layerId);
@@ -187,7 +187,7 @@ export function loadCurrentStyles(type, featureId) {
 
     // If featureId exists, load the drawing's style
     if (featureId) {
-        const layerInfo = state.drawnLayers.find(l => l.id === featureId);
+        const layerInfo = window.drawnLayers.find(l => l.id === featureId);
         if (layerInfo && layerInfo.layer && layerInfo.layer.options && layerInfo.layer.options.styleInfo) {
             const styleInfo = layerInfo.layer.options.styleInfo;
 
@@ -352,7 +352,7 @@ export function applyStyle() {
                     console.log(`${layerType} style applied to feature: ${layerId}`);
                 } else {
                     // Apply style based on drawing type
-                    const layerInfo = state.drawnLayers.find(l => l.id === layerId);
+                    const layerInfo = window.drawnLayers.find(l => l.id === layerId);
                     if (layerInfo) {
                         const type = layerInfo.type;
                         applyStyleToFeature(layerId, type);
@@ -372,7 +372,7 @@ export function applyStyle() {
                         applyStyleToLayer(targetLayer, layerId, layerType);
                     } else {
                         // Check all style types and apply those used in layer
-                        const features = state.layerFeatures[layerId] || [];
+                        const features = window.layerFeatures[layerId] || [];
                         const hasPoint = features.some(f => f.type === 'point');
                         const hasLine = features.some(f => f.type === 'line');
                         const hasPolygon = features.some(f => f.type === 'polygon');
@@ -388,29 +388,29 @@ export function applyStyle() {
         } else {
             console.error("No layer or drawing specified for style application");
             // Try using active layer
-            if (state.activeLayerId) {
-                const targetLayer = document.querySelector(`[data-layer-id="${state.activeLayerId}"]`);
+            if (window.activeLayerId) {
+                const targetLayer = document.querySelector(`[data-layer-id="${window.activeLayerId}"]`);
                 if (targetLayer) {
                     if (layerType) {
-                        applyStyleToLayer(targetLayer, state.activeLayerId, layerType);
-                        console.log(`${layerType} style applied to active layer: ${state.activeLayerId}`);
+                        applyStyleToLayer(targetLayer, window.activeLayerId, layerType);
+                        console.log(`${layerType} style applied to active layer: ${window.activeLayerId}`);
                     } else {
                         // Apply to all geometry types in active layer
-                        const features = state.layerFeatures[state.activeLayerId] || [];
+                        const features = window.layerFeatures[window.activeLayerId] || [];
                         const hasPoint = features.some(f => f.type === 'point');
                         const hasLine = features.some(f => f.type === 'line');
                         const hasPolygon = features.some(f => f.type === 'polygon');
 
-                        if (hasPoint) applyStyleToLayer(targetLayer, state.activeLayerId, 'point');
-                        if (hasLine) applyStyleToLayer(targetLayer, state.activeLayerId, 'line');
-                        if (hasPolygon) applyStyleToLayer(targetLayer, state.activeLayerId, 'polygon');
+                        if (hasPoint) applyStyleToLayer(targetLayer, window.activeLayerId, 'point');
+                        if (hasLine) applyStyleToLayer(targetLayer, window.activeLayerId, 'line');
+                        if (hasPolygon) applyStyleToLayer(targetLayer, window.activeLayerId, 'polygon');
                     }
                 }
             }
         }
 
         // Save style settings
-        saveStyles(layerId || state.activeLayerId, layerType);
+        saveStyles(layerId || window.activeLayerId, layerType);
 
         // Update draw control
         if (typeof updateDrawControl === 'function') {
@@ -420,7 +420,7 @@ export function applyStyle() {
         console.log("Style successfully applied");
 
         // Update style mode indicator
-        const targetLayerId = layerId || state.activeLayerId;
+        const targetLayerId = layerId || window.activeLayerId;
         if (targetLayerId) {
             const currentMode = document.getElementById('styleMode')?.value || 'custom';
             updateLayerStyleModeIndicator(targetLayerId, currentMode);
@@ -438,7 +438,7 @@ export function applyStyle() {
  * @param {string} type - Geometry type
  */
 export function applyStyleToFeature(featureId, type) {
-    const layerInfo = state.drawnLayers.find(l => l.id === featureId);
+    const layerInfo = window.drawnLayers.find(l => l.id === featureId);
     if (!layerInfo) return;
 
     const layer = layerInfo.layer;
@@ -592,13 +592,13 @@ export function applyStyleToLayer(layerItem, layerId, layerType) {
     console.log(`Applying layer style: layerId=${layerId}, layerType=${layerType}`);
 
     // Update layer drawings
-    if (state.layerFeatures[layerId]) {
-        console.log(`Updating ${state.layerFeatures[layerId].length} drawings in layer`);
+    if (window.layerFeatures[layerId]) {
+        console.log(`Updating ${window.layerFeatures[layerId].length} drawings in layer`);
 
         // Filter by selected type
         const filteredFeatures = layerType
-            ? state.layerFeatures[layerId].filter(f => f.type === layerType)
-            : state.layerFeatures[layerId];
+            ? window.layerFeatures[layerId].filter(f => f.type === layerType)
+            : window.layerFeatures[layerId];
 
         filteredFeatures.forEach(feature => {
             applyStyleToFeature(feature.id, feature.type);
@@ -961,7 +961,7 @@ function handleRealTimeStyleUpdate() {
                 applyStyle();
             } else {
                 // If modal is not open apply style to active layer
-                if (state.activeLayerId) {
+                if (window.activeLayerId) {
                     applyStyleToActiveLayer();
                 }
             }
@@ -996,7 +996,7 @@ function handleRealTimeStyleUpdate() {
 export function handleStyleModeChange(mode) {
     console.log("=== Style mode change starting ===");
     console.log("New mode:", mode);
-    console.log("Active layer:", state.activeLayerId);
+    console.log("Active layer:", window.activeLayerId);
 
     if (mode === 'default') {
         // Load default values and disable controls
@@ -1033,14 +1033,14 @@ export function handleStyleModeChange(mode) {
             const isModalOpen = modal && modal.style.display !== 'none';
             const hasModalLayerId = modal && modal.dataset.layerId;
 
-            console.log("Modal status:", { isModalOpen, hasModalLayerId, activeLayerId: state.activeLayerId });
+            console.log("Modal status:", { isModalOpen, hasModalLayerId, activeLayerId: window.activeLayerId });
 
             if (isModalOpen && hasModalLayerId) {
                 console.log("Modal open, using applyStyle...");
                 applyStyle();
             } else {
                 // If modal is not open apply style to active layer
-                if (state.activeLayerId) {
+                if (window.activeLayerId) {
                     console.log("Modal not open, applying style to active layer...");
                     applyStyleToActiveLayer();
                 } else {
@@ -1056,9 +1056,9 @@ export function handleStyleModeChange(mode) {
             }
 
             // CRITICAL: Update style settings mode indicator
-            if (state.activeLayerId) {
-                console.log(`Updating style settings mode indicator: ${state.activeLayerId} -> ${mode}`);
-                updateLayerStyleModeIndicator(state.activeLayerId, mode);
+            if (window.activeLayerId) {
+                console.log(`Updating style settings mode indicator: ${window.activeLayerId} -> ${mode}`);
+                updateLayerStyleModeIndicator(window.activeLayerId, mode);
                 showToast(`Style mode: ${mode === 'default' ? 'System Defaults' : 'Customized'}`, 'info');
             }
         } catch (error) {
@@ -1071,24 +1071,24 @@ export function handleStyleModeChange(mode) {
  * Apply style to active layer (without modal)
  */
 export function applyStyleToActiveLayer() {
-    if (!state.activeLayerId) {
+    if (!window.activeLayerId) {
         console.warn("Active layer not found");
         return;
     }
 
     console.log("=== Applying style to active layer ===");
-    console.log("Active layer ID:", state.activeLayerId);
+    console.log("Active layer ID:", window.activeLayerId);
 
-    const targetLayer = document.querySelector(`[data-layer-id="${state.activeLayerId}"]`);
+    const targetLayer = document.querySelector(`[data-layer-id="${window.activeLayerId}"]`);
     if (!targetLayer) {
-        console.error("Active layer not found in DOM:", state.activeLayerId);
+        console.error("Active layer not found in DOM:", window.activeLayerId);
         return;
     }
 
     // Check drawing types in layer and apply style to all
-    const features = state.layerFeatures[state.activeLayerId] || [];
+    const features = window.layerFeatures[window.activeLayerId] || [];
     console.log("layerFeatures[activeLayerId]:", features);
-    console.log("All layerFeatures:", state.layerFeatures);
+    console.log("All layerFeatures:", window.layerFeatures);
 
     const hasPoint = features.some(f => f.type === 'point');
     const hasLine = features.some(f => f.type === 'line');
@@ -1104,22 +1104,22 @@ export function applyStyleToActiveLayer() {
 
     if (hasPoint) {
         console.log("✅ Applying point style...");
-        applyStyleToLayer(targetLayer, state.activeLayerId, 'point');
+        applyStyleToLayer(targetLayer, window.activeLayerId, 'point');
     }
     if (hasLine) {
         console.log("✅ Applying line style...");
-        applyStyleToLayer(targetLayer, state.activeLayerId, 'line');
+        applyStyleToLayer(targetLayer, window.activeLayerId, 'line');
     }
     if (hasPolygon) {
         console.log("✅ Applying polygon style...");
-        applyStyleToLayer(targetLayer, state.activeLayerId, 'polygon');
+        applyStyleToLayer(targetLayer, window.activeLayerId, 'polygon');
     }
 
     console.log("=== Active layer style update completed ===");
 
     // Update style mode indicator (switch to custom mode when user makes changes)
     const currentMode = document.getElementById('styleMode')?.value || 'custom';
-    updateLayerStyleModeIndicator(state.activeLayerId, currentMode);
+    updateLayerStyleModeIndicator(window.activeLayerId, currentMode);
 }
 
 /**
@@ -1253,7 +1253,7 @@ function initializeThemeTab(layerId) {
     if (!layerId) return;
 
     // Find features in active layer
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
 
     if (layerFeatures.length === 0) return;
 

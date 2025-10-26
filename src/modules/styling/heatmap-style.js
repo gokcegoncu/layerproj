@@ -18,13 +18,13 @@ let heatmapActive = false;
  */
 export function createHeatmapLayer(radius = 50, blur = 35) {
     // Remove old heatmap if exists
-    if (heatmapLayer && state.map && state.map.hasLayer(heatmapLayer)) {
-        state.map.removeLayer(heatmapLayer);
+    if (heatmapLayer && window.map && window.map.hasLayer(heatmapLayer)) {
+        window.map.removeLayer(heatmapLayer);
         heatmapLayer = null;
     }
 
     // Find points with value
-    const pointsWithValue = state.drawnLayers.filter(l =>
+    const pointsWithValue = window.drawnLayers.filter(l =>
         l.type === 'point' &&
         l.properties &&
         l.properties.value !== undefined &&
@@ -67,8 +67,8 @@ export function createHeatmapLayer(radius = 50, blur = 35) {
         }
     });
 
-    if (state.map) {
-        heatmapLayer.addTo(state.map);
+    if (window.map) {
+        heatmapLayer.addTo(window.map);
     }
 
     showNotification(`🔥 Heatmap created! (${pointsWithValue.length} points, radius: ${radius}px, blur: ${blur}px)`, 'success');
@@ -92,8 +92,8 @@ export function applyHeatmapVisualization() {
  * Remove heatmap visualization
  */
 export function removeHeatmapVisualization() {
-    if (heatmapLayer && state.map && state.map.hasLayer(heatmapLayer)) {
-        state.map.removeLayer(heatmapLayer);
+    if (heatmapLayer && window.map && window.map.hasLayer(heatmapLayer)) {
+        window.map.removeLayer(heatmapLayer);
         heatmapLayer = null;
     }
     heatmapActive = false;
@@ -126,7 +126,7 @@ export function applyHeatmapStyle() {
     }
 
     // Get only features with values from active layer
-    const layersWithValues = state.drawnLayers.filter(l =>
+    const layersWithValues = window.drawnLayers.filter(l =>
         l.layerId === layerId &&
         l.properties &&
         l.properties.value !== undefined
@@ -177,8 +177,8 @@ export function applyHeatmapStyle() {
     });
 
     // Refresh map
-    if (state.map && state.map.invalidateSize) {
-        setTimeout(() => state.map.invalidateSize(), 100);
+    if (window.map && window.map.invalidateSize) {
+        setTimeout(() => window.map.invalidateSize(), 100);
     }
 
     showNotification(`🔥 Heatmap style applied! (${applied} features)`, 'success');
@@ -248,7 +248,7 @@ export function setHeatmapIntensity(intensity) {
     if (!heatmapLayer) return;
 
     // Update max value based on intensity
-    const pointsWithValue = state.drawnLayers.filter(l =>
+    const pointsWithValue = window.drawnLayers.filter(l =>
         l.type === 'point' &&
         l.properties &&
         l.properties.value !== undefined
@@ -403,7 +403,7 @@ export function importHeatmapConfig(config) {
  * @returns {Array} - Array of [lat, lng, intensity] points
  */
 export function getHeatmapDataPoints() {
-    const pointsWithValue = state.drawnLayers.filter(l =>
+    const pointsWithValue = window.drawnLayers.filter(l =>
         l.type === 'point' &&
         l.properties &&
         l.properties.value !== undefined &&
@@ -451,8 +451,8 @@ export function createHeatmapFromGeoJSON(geojson, valueField, options = {}) {
     }
 
     // Remove old heatmap
-    if (heatmapLayer && state.map && state.map.hasLayer(heatmapLayer)) {
-        state.map.removeLayer(heatmapLayer);
+    if (heatmapLayer && window.map && window.map.hasLayer(heatmapLayer)) {
+        window.map.removeLayer(heatmapLayer);
     }
 
     // Create heatmap
@@ -466,8 +466,8 @@ export function createHeatmapFromGeoJSON(geojson, valueField, options = {}) {
 
     heatmapLayer = L.heatLayer(heatData, { ...defaultOptions, ...options });
 
-    if (state.map) {
-        heatmapLayer.addTo(state.map);
+    if (window.map) {
+        heatmapLayer.addTo(window.map);
     }
 
     heatmapActive = true;

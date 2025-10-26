@@ -35,8 +35,8 @@ export function initMeasurementTools(map) {
             console.log('Distance measurement started');
 
             // Enable drawing mode for distance
-            if (state.drawControl && state.drawControl._toolbars && state.drawControl._toolbars.draw) {
-                const polylineTool = state.drawControl._toolbars.draw._modes.polyline;
+            if (window.drawControl && window.drawControl._toolbars && window.drawControl._toolbars.draw) {
+                const polylineTool = window.drawControl._toolbars.draw._modes.polyline;
                 if (polylineTool && polylineTool.handler) {
                     polylineTool.handler.enable();
                     showToast('Click on map to measure distance', 'info');
@@ -53,8 +53,8 @@ export function initMeasurementTools(map) {
             console.log('Area measurement started');
 
             // Enable drawing mode for area
-            if (state.drawControl && state.drawControl._toolbars && state.drawControl._toolbars.draw) {
-                const polygonTool = state.drawControl._toolbars.draw._modes.polygon;
+            if (window.drawControl && window.drawControl._toolbars && window.drawControl._toolbars.draw) {
+                const polygonTool = window.drawControl._toolbars.draw._modes.polygon;
                 if (polygonTool && polygonTool.handler) {
                     polygonTool.handler.enable();
                     showToast('Click on map to measure area', 'info');
@@ -70,8 +70,8 @@ export function initMeasurementTools(map) {
                 console.log('Stopping current measurement:', this.currentTool);
 
                 // Disable any active drawing
-                if (state.drawControl && state.drawControl._toolbars && state.drawControl._toolbars.draw) {
-                    const toolbar = state.drawControl._toolbars.draw;
+                if (window.drawControl && window.drawControl._toolbars && window.drawControl._toolbars.draw) {
+                    const toolbar = window.drawControl._toolbars.draw;
                     Object.keys(toolbar._modes).forEach(key => {
                         const mode = toolbar._modes[key];
                         if (mode.handler && mode.handler.enabled()) {
