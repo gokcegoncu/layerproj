@@ -695,6 +695,100 @@ function handleAction(action, element, event) {
                 attrEditorModal.style.display = 'block';
             }
             break;
+        case 'auto-assign-values': {
+            // Get selected field type
+            const fieldType = document.getElementById('autoAssignField').value;
+            if (!fieldType) {
+                alert('⚠️ Lütfen bir alan türü seçin!');
+                return;
+            }
+
+            // Get active layer
+            const layerId = window.attributeAssignmentLayerId || window.activeLayerId || AppState.get('activeLayerId');
+            if (!layerId || layerId === 'default-layer') {
+                alert('⚠️ Lütfen önce bir katman seçin!');
+                return;
+            }
+
+            const layerFeatures = window.layerFeatures[layerId] || [];
+            if (layerFeatures.length === 0) {
+                alert('⚠️ Seçili katmanda özellik bulunmuyor!');
+                return;
+            }
+
+            // Count features by type
+            const counts = {
+                point: 0,
+                line: 0,
+                polygon: 0
+            };
+
+            let successCount = 0;
+            let globalIndex = 1;
+
+            // Assign values to each feature
+            layerFeatures.forEach((feature, index) => {
+                const featureInfo = window.drawnLayers.find(f => f.id === feature.id);
+                if (!featureInfo) return;
+
+                // Determine geometry type
+                const geometryType = feature.type || 'point';
+                counts[geometryType]++;
+
+                // Initialize properties if not exist
+                if (!featureInfo.properties) {
+                    featureInfo.properties = {};
+                }
+
+                // Generate value based on field type
+                switch (fieldType) {
+                    case 'name': {
+                        // Generate name based on geometry type
+                        const typeNames = {
+                            point: 'Nokta',
+                            line: 'Çizgi',
+                            polygon: 'Poligon'
+                        };
+                        featureInfo.properties.name = `${typeNames[geometryType]}-${counts[geometryType]}`;
+                        break;
+                    }
+                    case 'value': {
+                        // Assign sequential numeric value
+                        featureInfo.properties.value = globalIndex;
+                        break;
+                    }
+                    case 'category': {
+                        // Assign category based on geometry type
+                        const categoryNames = {
+                            point: 'Point',
+                            line: 'Line',
+                            polygon: 'Polygon'
+                        };
+                        featureInfo.properties.category = categoryNames[geometryType];
+                        break;
+                    }
+                    case 'sequential': {
+                        // Assign formatted ID
+                        featureInfo.properties.id = `F-${String(globalIndex).padStart(3, '0')}`;
+                        featureInfo.properties.name = `Feature ${String(globalIndex).padStart(3, '0')}`;
+                        break;
+                    }
+                }
+
+                // Save to database
+                DB.updateFeatureProperties(feature.id, featureInfo.properties);
+                successCount++;
+                globalIndex++;
+            });
+
+            // Show success message
+            if (Console && Console.logToConsole) {
+                Console.logToConsole(`✅ ${successCount} özelliğe otomatik değer atandı`, 'success');
+            }
+
+            alert(`✅ ${successCount} özelliğe otomatik değer atandı!\n\nNokta: ${counts.point}\nÇizgi: ${counts.line}\nPoligon: ${counts.polygon}`);
+            break;
+        }
         case 'delete-feature-from-context':
             console.log('Delete feature from context menu');
             // Delete logic would go here

@@ -1108,9 +1108,33 @@
                 <button class="close-btn" data-action="close-attribute-editor">&times;</button>
             </div>
             <div class="modal-body" style="padding: 20px;">
-                <div class="control-row">
-                    <label style="font-weight: 600;">İsim:</label>
-                    <input type="text" id="attrName" placeholder="Örn: Merkez Nokta" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                <!-- Otomatik Değer Atama Bölümü -->
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #1976d2;">🤖 Otomatik Değer Atama</h4>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="autoAssignField" style="flex: 1; padding: 8px; border: 1px solid #90caf9; border-radius: 4px;">
+                            <option value="">Alan türü seçin...</option>
+                            <option value="name">İsim (Nokta-1, Çizgi-1, vb.)</option>
+                            <option value="value">Değer (1, 2, 3, ...)</option>
+                            <option value="category">Kategori (geometri tipine göre)</option>
+                            <option value="sequential">Sıralı ID (F-001, F-002, ...)</option>
+                        </select>
+                        <button class="btn btn-primary" data-action="auto-assign-values" style="white-space: nowrap;">
+                            ⚡ Otomatik Ata
+                        </button>
+                    </div>
+                    <small style="color: #1565c0; display: block; margin-top: 8px;">
+                        Seçili katmandaki tüm özeliklere otomatik değer atanır
+                    </small>
+                </div>
+
+                <!-- Manuel Değer Girişi -->
+                <div style="border-top: 2px solid #dee2e6; padding-top: 15px;">
+                    <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #495057;">✏️ Manuel Değer Girişi</h4>
+                    <div class="control-row">
+                        <label style="font-weight: 600;">İsim:</label>
+                        <input type="text" id="attrName" placeholder="Örn: Merkez Nokta" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                    </div>
                 </div>
                 <div class="control-row" style="margin-top: 15px;">
                     <label style="font-weight: 600;">Açıklama:</label>
