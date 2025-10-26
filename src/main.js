@@ -632,83 +632,10 @@ function handleAction(action, element, event) {
             break;
 
         // Attribute editor actions
-        case 'close-attribute-editor':
+        case 'close-attribute-editor': {
             const attrEditor = document.getElementById('attributeEditorModal');
             if (attrEditor) {
                 attrEditor.style.display = 'none';
-            }
-            break;
-        case 'save-feature-attributes': {
-            // Get values from modal
-            const name = document.getElementById('attrName').value.trim();
-            const description = document.getElementById('attrDescription').value.trim();
-            const value = document.getElementById('attrValue').value.trim();
-            const category = document.getElementById('attrCategory').value.trim();
-            const customText = document.getElementById('attrCustom').value.trim();
-
-            // Build properties object
-            const properties = {};
-            if (name) properties.name = name;
-            if (description) properties.description = description;
-            if (value) properties.value = parseFloat(value);
-            if (category) properties.category = category;
-
-            // Parse custom JSON if provided
-            if (customText) {
-                try {
-                    const customProps = JSON.parse(customText);
-                    Object.assign(properties, customProps);
-                } catch (e) {
-                    alert('⚠️ Özel alanlar geçerli JSON formatında değil!');
-                    return;
-                }
-            }
-
-            // Check if we have any properties to save
-            if (Object.keys(properties).length === 0) {
-                alert('⚠️ En az bir alan doldurulmalıdır!');
-                return;
-            }
-
-            // Check if we're editing a specific feature or assigning to all features in layer
-            if (window.editingFeatureId) {
-                // Edit single feature
-                const featureInfo = window.drawnLayers.find(f => f.id === window.editingFeatureId);
-                if (featureInfo) {
-                    featureInfo.properties = properties;
-                    DB.updateFeatureProperties(window.editingFeatureId, properties);
-
-                    if (Console && Console.logToConsole) {
-                        Console.logToConsole('Özellik güncellendi', 'success');
-                    }
-                }
-                window.editingFeatureId = null;
-            } else if (window.attributeAssignmentLayerId) {
-                // Assign to all features in layer
-                const layerId = window.attributeAssignmentLayerId;
-                const layerFeatures = window.layerFeatures[layerId] || [];
-
-                let updateCount = 0;
-                layerFeatures.forEach(feature => {
-                    const featureInfo = window.drawnLayers.find(f => f.id === feature.id);
-                    if (featureInfo) {
-                        featureInfo.properties = { ...featureInfo.properties, ...properties };
-                        DB.updateFeatureProperties(feature.id, featureInfo.properties);
-                        updateCount++;
-                    }
-                });
-
-                if (Console && Console.logToConsole) {
-                    Console.logToConsole(`${updateCount} özellik güncellendi`, 'success');
-                }
-
-                window.attributeAssignmentLayerId = null;
-            }
-
-            // Close modal
-            const modal = document.getElementById('attributeEditorModal');
-            if (modal) {
-                modal.style.display = 'none';
             }
             break;
         }

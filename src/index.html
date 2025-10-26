@@ -1102,63 +1102,59 @@
 
     <!-- Attribute Editor Modal -->
     <div class="modal" id="attributeEditorModal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h3>📝 Özellik Düzenleyici</h3>
+                <h3>🤖 Otomatik Değer Atama</h3>
                 <button class="close-btn" data-action="close-attribute-editor">&times;</button>
             </div>
             <div class="modal-body" style="padding: 20px;">
-                <!-- Otomatik Değer Atama Bölümü -->
-                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
-                    <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #1976d2;">🤖 Otomatik Değer Atama</h4>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <select id="autoAssignField" style="flex: 1; padding: 8px; border: 1px solid #90caf9; border-radius: 4px;">
-                            <option value="">Alan türü seçin...</option>
-                            <option value="name">İsim (Nokta-1, Çizgi-1, vb.)</option>
-                            <option value="value">Değer (1, 2, 3, ...)</option>
-                            <option value="category">Kategori (geometri tipine göre)</option>
-                            <option value="sequential">Sıralı ID (F-001, F-002, ...)</option>
-                        </select>
-                        <button class="btn btn-primary" data-action="auto-assign-values" style="white-space: nowrap;">
-                            ⚡ Otomatik Ata
-                        </button>
-                    </div>
-                    <small style="color: #1565c0; display: block; margin-top: 8px;">
-                        Seçili katmandaki tüm özeliklere otomatik değer atanır
-                    </small>
+                <!-- Açıklama -->
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4caf50;">
+                    <p style="margin: 0; color: #2e7d32; font-size: 14px;">
+                        <strong>💡 Bilgi:</strong> Seçili katmandaki <strong>tüm özelliklere</strong> (nokta, çizgi, poligon)
+                        otomatik olarak değer atanacaktır. Atama türünü seçip butona tıklayın.
+                    </p>
                 </div>
 
-                <!-- Manuel Değer Girişi -->
-                <div style="border-top: 2px solid #dee2e6; padding-top: 15px;">
-                    <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #495057;">✏️ Manuel Değer Girişi</h4>
-                    <div class="control-row">
-                        <label style="font-weight: 600;">İsim:</label>
-                        <input type="text" id="attrName" placeholder="Örn: Merkez Nokta" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                <!-- Alan Türü Seçimi -->
+                <div class="control-row" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; min-width: 120px;">Atama Türü:</label>
+                    <select id="autoAssignField" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;">
+                        <option value="">Seçiniz...</option>
+                        <option value="name">📝 İsim (Nokta-1, Çizgi-1, Poligon-1)</option>
+                        <option value="value">🔢 Değer (1, 2, 3, 4, ...)</option>
+                        <option value="category">🏷️ Kategori (Point, Line, Polygon)</option>
+                        <option value="sequential">🆔 Sıralı ID (F-001, F-002, F-003)</option>
+                    </select>
+                </div>
+
+                <!-- Seçeneklerin Açıklamaları -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #495057;">📋 Atama Türü Açıklamaları:</h4>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #6c757d;">
+                        <li><strong>İsim:</strong> Geometri tipine göre isimlendirme (Nokta-1, Nokta-2, Çizgi-1, vb.)</li>
+                        <li><strong>Değer:</strong> Sıralı sayısal değerler - Isı haritası ve graduated stil için</li>
+                        <li><strong>Kategori:</strong> Geometri tipi kategorileri - Kategorik stil için</li>
+                        <li><strong>Sıralı ID:</strong> Formatlı ID ve isim (F-001: Feature 001)</li>
+                    </ul>
+                </div>
+
+                <!-- Örnek Sonuçlar -->
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #856404;">🎯 Örnek Sonuçlar:</h4>
+                    <div style="font-size: 12px; color: #856404; font-family: monospace;">
+                        <div><strong>İsim:</strong> name: "Nokta-1", "Nokta-2", "Çizgi-1", "Poligon-1"</div>
+                        <div><strong>Değer:</strong> value: 1, 2, 3, 4, 5...</div>
+                        <div><strong>Kategori:</strong> category: "Point", "Line", "Polygon"</div>
+                        <div><strong>Sıralı ID:</strong> id: "F-001", name: "Feature 001"</div>
                     </div>
-                </div>
-                <div class="control-row" style="margin-top: 15px;">
-                    <label style="font-weight: 600;">Açıklama:</label>
-                    <textarea id="attrDescription" placeholder="Örn: Bu nokta şehir merkezini göstermektedir" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; min-height: 60px;"></textarea>
-                </div>
-                <div class="control-row" style="margin-top: 15px;">
-                    <label style="font-weight: 600;">Değer (Numeric):</label>
-                    <input type="number" id="attrValue" placeholder="Örn: 125000" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
-                    <small style="color: #6c757d; display: block; margin-top: 5px;">Bu değer ısı haritası ve graduated stilinde kullanılır</small>
-                </div>
-                <div class="control-row" style="margin-top: 15px;">
-                    <label style="font-weight: 600;">Kategori:</label>
-                    <input type="text" id="attrCategory" placeholder="Örn: Park, Hastane, Okul" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
-                    <small style="color: #6c757d; display: block; margin-top: 5px;">Bu kategori kategorik stilinde kullanılır</small>
-                </div>
-                <div class="control-row" style="margin-top: 15px;">
-                    <label style="font-weight: 600;">Özel Alanlar (JSON):</label>
-                    <textarea id="attrCustom" placeholder='{"alan1": "değer1", "alan2": 123}' style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; min-height: 60px; font-family: monospace;"></textarea>
-                    <small style="color: #6c757d; display: block; margin-top: 5px;">İstediğiniz ek alanları JSON formatında ekleyebilirsiniz</small>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-action="close-attribute-editor">İptal</button>
-                <button class="btn btn-primary" data-action="save-feature-attributes">💾 Kaydet</button>
+                <button class="btn btn-primary" data-action="auto-assign-values" style="padding: 10px 30px; font-size: 15px;">
+                    ⚡ Otomatik Ata
+                </button>
             </div>
         </div>
     </div>
