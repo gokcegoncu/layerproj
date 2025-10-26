@@ -1005,9 +1005,30 @@ window.DB = DB;
  */
 function waitForExternalLibraries() {
     return new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 200; // 10 seconds max
+
         const checkLibraries = () => {
+            attempts++;
+
+            // Debug logging
+            if (attempts === 1) {
+                console.log('⏳ Waiting for external libraries...');
+                console.log('Leaflet:', typeof window.L);
+                console.log('proj4:', typeof window.proj4);
+                console.log('Leaflet.Draw:', typeof window.L?.Draw);
+            }
+
             if (window.L && window.L.Control && window.L.Control.Draw && window.proj4) {
+                console.log('✅ All external libraries loaded!');
                 resolve();
+            } else if (attempts >= maxAttempts) {
+                console.error('❌ Timeout waiting for external libraries');
+                console.log('L:', typeof window.L);
+                console.log('L.Control:', typeof window.L?.Control);
+                console.log('L.Control.Draw:', typeof window.L?.Control?.Draw);
+                console.log('proj4:', typeof window.proj4);
+                resolve(); // Continue anyway
             } else {
                 setTimeout(checkLibraries, 50);
             }
