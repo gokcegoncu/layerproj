@@ -333,6 +333,34 @@ function handleStateChange(event) {
 }
 
 /**
+ * Select a layer programmatically
+ * @param {string} layerId - Layer ID to select
+ */
+function selectLayer(layerId) {
+    if (!layerId || layerId === 'default-layer') return;
+
+    // Clear all previous selections
+    document.querySelectorAll('.layer-item.selected-highlight').forEach(item => {
+        item.classList.remove('selected-highlight');
+    });
+
+    // Find and select the target layer
+    const layerElement = document.querySelector(`[data-layer-id="${layerId}"]`);
+    if (layerElement) {
+        layerElement.classList.add('selected-highlight');
+
+        // Update state
+        AppState.set('activeLayerId', layerId);
+        window.activeLayerId = layerId;
+
+        // Update layer selection in LayerManager
+        if (LayerManager.selectLayer) {
+            LayerManager.selectLayer(layerId);
+        }
+    }
+}
+
+/**
  * Handle document clicks (event delegation)
  */
 function handleDocumentClick(event) {
@@ -413,15 +441,36 @@ function handleAction(action, element, event) {
         case 'show-create-layer-modal':
             Modals.showCreateLayerModal && Modals.showCreateLayerModal();
             break;
-        case 'delete-layer':
+        case 'delete-layer': {
+            // Auto-select the layer first
+            const layerItemToDelete = element.closest('.layer-item');
+            if (layerItemToDelete) {
+                const layerId = layerItemToDelete.getAttribute('data-layer-id');
+                selectLayer(layerId);
+            }
             LayerManager.deleteLayer && LayerManager.deleteLayer(element);
             break;
-        case 'show-layer-properties':
+        }
+        case 'show-layer-properties': {
+            // Auto-select the layer first
+            const layerItemProps = element.closest('.layer-item');
+            if (layerItemProps) {
+                const layerId = layerItemProps.getAttribute('data-layer-id');
+                selectLayer(layerId);
+            }
             Modals.showLayerProperties && Modals.showLayerProperties(element);
             break;
-        case 'open-layer-details':
+        }
+        case 'open-layer-details': {
+            // Auto-select the layer first
+            const layerItemDetails = element.closest('.layer-item');
+            if (layerItemDetails) {
+                const layerId = layerItemDetails.getAttribute('data-layer-id');
+                selectLayer(layerId);
+            }
             Modals.openLayerDetails && Modals.openLayerDetails(element);
             break;
+        }
         case 'toggle-layer-filter':
             LayerManager.toggleLayerFilter && LayerManager.toggleLayerFilter();
             break;
@@ -438,12 +487,26 @@ function handleAction(action, element, event) {
             break;
 
         // Style actions
-        case 'open-style-modal':
+        case 'open-style-modal': {
+            // Auto-select the layer first
+            const layerItemStyle = element.closest('.layer-item');
+            if (layerItemStyle) {
+                const layerId = layerItemStyle.getAttribute('data-layer-id');
+                selectLayer(layerId);
+            }
             StyleManager.openStyleModal && StyleManager.openStyleModal();
             break;
-        case 'show-style-modal':
+        }
+        case 'show-style-modal': {
+            // Auto-select the layer first
+            const layerItemShowStyle = element.closest('.layer-item');
+            if (layerItemShowStyle) {
+                const layerId = layerItemShowStyle.getAttribute('data-layer-id');
+                selectLayer(layerId);
+            }
             StyleManager.showStyleModal && StyleManager.showStyleModal(element);
             break;
+        }
         case 'close-style-modal':
             StyleManager.closeStyleModal && StyleManager.closeStyleModal();
             break;
@@ -828,14 +891,43 @@ function handleAction(action, element, event) {
             break;
 
         // Map actions
-        case 'zoom-to-layer':
+        case 'zoom-to-layer': {
+            // Auto-select the layer first
             const layerToZoom = element.closest('.layer-item');
             if (layerToZoom) {
                 const layerId = layerToZoom.getAttribute('data-layer-id');
-                console.log('Zoom to layer:', layerId);
-                // Zoom logic would go here
+                selectLayer(layerId);
+
+                // Zoom to layer features
+                const layerFeatures = window.layerFeatures[layerId];
+                if (layerFeatures && layerFeatures.length > 0 && window.map) {
+                    const bounds = L.latLngBounds([]);
+                    let hasValidBounds = false;
+
+                    layerFeatures.forEach(feature => {
+                        if (feature.layer && feature.layer.getBounds) {
+                            bounds.extend(feature.layer.getBounds());
+                            hasValidBounds = true;
+                        } else if (feature.layer && feature.layer.getLatLng) {
+                            bounds.extend(feature.layer.getLatLng());
+                            hasValidBounds = true;
+                        }
+                    });
+
+                    if (hasValidBounds) {
+                        window.map.fitBounds(bounds, { padding: [50, 50] });
+                        if (Console && Console.logToConsole) {
+                            Console.logToConsole('Katmana odaklandı', 'success');
+                        }
+                    } else {
+                        if (Console && Console.logToConsole) {
+                            Console.logToConsole('Katmanda görüntülenebilir özellik yok', 'warning');
+                        }
+                    }
+                }
             }
             break;
+        }
         case 'zoom-to-extent':
             console.log('Zoom to extent');
             if (window.map && window.drawnItems) {

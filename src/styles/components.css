@@ -756,7 +756,8 @@
     transform: translate(-50%, -50%);
     background: var(--bg-primary);
     border-radius: var(--radius-xl);
-    width: 480px;
+    width: 600px; /* Increased from 480px for better content fit */
+    max-width: 95vw; /* Responsive for smaller screens */
     max-height: 90vh;
     overflow: visible; /* Allow modal-body to scroll */
     display: flex;
@@ -822,9 +823,10 @@
 }
 
 .modal-body {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg) var(--spacing-xl);
     overflow-y: auto;
-    max-height: 70vh;
+    max-height: calc(90vh - 180px); /* Better height calculation */
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .modal-footer {
@@ -887,8 +889,12 @@
 
 .style-tabs {
     display: flex;
-    border-bottom: 1px solid #dee2e6;
+    gap: 5px;
+    border-bottom: 2px solid #e9ecef;
     margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 8px 8px 0 0;
 }
 
 .style-tab {
@@ -897,61 +903,91 @@
     border: none;
     background: none;
     border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    border-radius: 6px 6px 0 0;
+    font-weight: 500;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.style-tab:hover {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
 }
 
 .style-tab.active {
     border-bottom-color: #0d6efd;
     color: #0d6efd;
-    font-weight: 500;
+    font-weight: 600;
+    background: white;
 }
 
 .style-section {
     margin-bottom: 20px;
+    padding: 10px 0;
 }
 
 .style-section h4 {
     font-size: 14px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     color: #495057;
-    border-bottom: 1px solid #dee2e6;
-    padding-bottom: 5px;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 6px;
+    font-weight: 600;
 }
 
 .control-row {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    gap: 10px; /* Better spacing between elements */
 }
 
 .control-row label {
-    flex: 0 0 140px;
+    flex: 0 0 150px; /* Increased from 140px */
     font-size: 13px;
-    color: #6c757d;
+    color: #495057; /* Darker for better readability */
+    font-weight: 500;
 }
 
 .control-row input[type="color"] {
-    width: 40px;
-    height: 25px;
-    padding: 0;
+    width: 45px;
+    height: 30px;
+    padding: 2px;
     border: 1px solid #ced4da;
     border-radius: 4px;
+    cursor: pointer;
 }
 
 .control-row input[type="range"] {
     flex: 1;
-    margin: 0 10px;
+    margin: 0;
+    min-width: 100px; /* Prevent too narrow sliders */
 }
 
 .control-row .value-display {
-    min-width: 40px;
+    min-width: 50px;
     text-align: right;
     font-size: 12px;
-    color: #6c757d;
+    color: #495057;
+    font-weight: 500;
 }
 
 .control-row select {
     flex: 1;
-    padding: 4px;
+    padding: 6px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 13px;
+    background: white;
+    min-width: 120px; /* Prevent too narrow selects */
+}
+
+.control-row input[type="text"],
+.control-row input[type="number"],
+.control-row textarea {
+    flex: 1;
+    padding: 6px 8px;
     border: 1px solid #ced4da;
     border-radius: 4px;
     font-size: 13px;
