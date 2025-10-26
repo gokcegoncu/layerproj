@@ -250,5 +250,19 @@ export function updateConsole() {
     MessageConsole.updateConsole();
 }
 
+/**
+ * Initialize the console
+ */
+export function initConsole() {
+    MessageConsole.init();
+}
+
+/**
+ * Toggle console visibility
+ */
+export function toggleConsole() {
+    MessageConsole.toggle();
+}
+
 // Export the MessageConsole object
 export { MessageConsole };

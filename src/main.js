@@ -375,6 +375,241 @@ function handleAction(action, element, event) {
         case 'toggle-console':
             Console.toggleConsole && Console.toggleConsole();
             break;
+        case 'clear-message-console':
+            Console.clearConsole && Console.clearConsole();
+            break;
+        case 'toggle-message-console':
+            Console.toggleConsole && Console.toggleConsole();
+            break;
+        case 'toggle-console-dock':
+            console.log('Toggle console dock');
+            // Implementation depends on console dock feature
+            break;
+        case 'toggle-console-minimize':
+            const consoleEl = document.getElementById('messageConsole');
+            if (consoleEl) {
+                consoleEl.classList.toggle('minimized');
+            }
+            break;
+
+        // Query actions
+        case 'open-query-modal':
+            const queryModal = document.getElementById('queryModal');
+            if (queryModal) {
+                queryModal.style.display = 'block';
+                const layerItem = element.closest('.layer-item');
+                if (layerItem) {
+                    queryModal.setAttribute('data-layer-id', layerItem.getAttribute('data-layer-id'));
+                }
+            }
+            break;
+        case 'close-query-modal':
+            const queryModalClose = document.getElementById('queryModal');
+            if (queryModalClose) {
+                queryModalClose.style.display = 'none';
+            }
+            break;
+        case 'apply-query':
+            console.log('Apply query');
+            // Query logic would go here
+            break;
+        case 'switch-query-tab':
+            document.querySelectorAll('#queryModal .style-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+            document.querySelectorAll('#queryModal .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const queryTabContent = document.getElementById(param + 'QueryTab');
+            if (queryTabContent) {
+                queryTabContent.classList.add('active');
+            }
+            break;
+
+        // Attribute editor actions
+        case 'close-attribute-editor':
+            const attrEditor = document.getElementById('attributeEditorModal');
+            if (attrEditor) {
+                attrEditor.style.display = 'none';
+            }
+            break;
+        case 'save-feature-attributes':
+            console.log('Save feature attributes');
+            // Save logic would go here
+            break;
+        case 'edit-feature-attributes':
+            const attrEditorModal = document.getElementById('attributeEditorModal');
+            if (attrEditorModal) {
+                attrEditorModal.style.display = 'block';
+            }
+            break;
+        case 'delete-feature-from-context':
+            console.log('Delete feature from context menu');
+            // Delete logic would go here
+            break;
+
+        // Layer details modal actions
+        case 'close-layer-details-modal':
+            const layerDetailsModal = document.getElementById('layerDetailsModal');
+            if (layerDetailsModal) {
+                layerDetailsModal.style.display = 'none';
+            }
+            break;
+        case 'add-feature-to-layer':
+            console.log('Add feature to layer');
+            // Add feature logic would go here
+            break;
+
+        // Create modal actions
+        case 'close-create-modal':
+            const createModal = document.getElementById('createModal');
+            if (createModal) {
+                createModal.style.display = 'none';
+            }
+            break;
+        case 'confirm-create':
+            console.log('Confirm create');
+            // Create logic would go here
+            break;
+
+        // Style modal tab switching
+        case 'switch-tab':
+            document.querySelectorAll('.style-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const tabContent = document.getElementById(param + 'Tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            break;
+
+        // Advanced style actions
+        case 'assign-field-values':
+            console.log('Assign field values');
+            // Field assignment logic would go here
+            break;
+        case 'apply-categorized-style':
+            console.log('Apply categorized style');
+            CategorizedStyle.applyCategorizedStyle && CategorizedStyle.applyCategorizedStyle();
+            break;
+        case 'apply-graduated-style':
+            console.log('Apply graduated style');
+            GraduatedStyle.applyGraduatedStyle && GraduatedStyle.applyGraduatedStyle();
+            break;
+        case 'apply-heatmap-visualization':
+            console.log('Apply heatmap visualization');
+            HeatmapStyle.applyHeatmapStyle && HeatmapStyle.applyHeatmapStyle();
+            break;
+        case 'remove-heatmap-visualization':
+            console.log('Remove heatmap visualization');
+            HeatmapStyle.removeHeatmapVisualization && HeatmapStyle.removeHeatmapVisualization();
+            break;
+        case 'save-and-close-style':
+            StyleManager.applyStyle && StyleManager.applyStyle();
+            StyleManager.closeStyleModal && StyleManager.closeStyleModal();
+            break;
+
+        // Legend actions (additional)
+        case 'close-legend':
+            Legend.hideLegend && Legend.hideLegend();
+            break;
+
+        // Map actions
+        case 'zoom-to-layer':
+            const layerToZoom = element.closest('.layer-item');
+            if (layerToZoom) {
+                const layerId = layerToZoom.getAttribute('data-layer-id');
+                console.log('Zoom to layer:', layerId);
+                // Zoom logic would go here
+            }
+            break;
+        case 'zoom-to-extent':
+            console.log('Zoom to extent');
+            if (window.map) {
+                window.map.fitBounds(window.drawnItems.getBounds());
+            }
+            break;
+
+        // Edit mode actions
+        case 'toggle-edit-mode':
+            console.log('Toggle edit mode');
+            element.classList.toggle('active');
+            // Edit mode logic would go here
+            break;
+        case 'toggle-delete-mode':
+            console.log('Toggle delete mode');
+            element.classList.toggle('active');
+            // Delete mode logic would go here
+            break;
+
+        // Scale actions
+        case 'toggle-scale-selector':
+            const scaleDropdown = document.getElementById('scaleDropdown');
+            if (scaleDropdown) {
+                scaleDropdown.classList.toggle('show');
+            }
+            break;
+        case 'set-fixed-scale':
+            const scaleText = document.getElementById('scaleText');
+            if (scaleText) {
+                scaleText.textContent = element.textContent;
+            }
+            const scaleDropdownClose = document.getElementById('scaleDropdown');
+            if (scaleDropdownClose) {
+                scaleDropdownClose.classList.remove('show');
+            }
+            console.log('Set fixed scale:', element.textContent);
+            break;
+        case 'set-dynamic-scale':
+            const scaleTextDynamic = document.getElementById('scaleText');
+            if (scaleTextDynamic) {
+                scaleTextDynamic.textContent = 'Dinamik';
+            }
+            const scaleDropdownDynamic = document.getElementById('scaleDropdown');
+            if (scaleDropdownDynamic) {
+                scaleDropdownDynamic.classList.remove('show');
+            }
+            console.log('Set dynamic scale');
+            break;
+
+        // Context menu actions
+        case 'context-menu-action':
+            if (param === 'zoom') {
+                console.log('Context menu: zoom');
+            } else if (param === 'style') {
+                console.log('Context menu: style');
+            } else if (param === 'properties') {
+                console.log('Context menu: properties');
+            } else if (param === 'delete') {
+                console.log('Context menu: delete');
+            }
+            break;
+
+        // Measurement settings
+        case 'close-measurement-settings':
+            const measurementSettings = document.getElementById('measurementSettings');
+            if (measurementSettings) {
+                measurementSettings.style.display = 'none';
+            }
+            break;
+        case 'reset-measurement-settings':
+            console.log('Reset measurement settings');
+            // Reset logic would go here
+            break;
+
+        // Fullscreen
+        case 'toggle-fullscreen':
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+            break;
 
         default:
             console.warn(`Unknown action: ${actionName}`);

@@ -412,3 +412,34 @@ export function getLayerProperties(layerId) {
         features: layerFeatures[layerId] || []
     };
 }
+
+/**
+ * Clear all selections (layers and groups)
+ */
+export function clearAllSelections() {
+    // Clear layer selections
+    document.querySelectorAll('.layer-item').forEach(item => {
+        item.classList.remove('selected-highlight', 'selected');
+    });
+
+    // Clear group selections
+    document.querySelectorAll('.group-header').forEach(header => {
+        header.classList.remove('selected');
+    });
+
+    // Clear active IDs
+    activeLayerId = null;
+    activeGroupId = null;
+    window.activeLayerId = null;
+    window.activeGroupId = null;
+}
+
+/**
+ * Toggle layer filter panel
+ */
+export function toggleLayerFilter() {
+    const filterPanel = document.getElementById('layerFilterPanel');
+    if (filterPanel) {
+        filterPanel.classList.toggle('active');
+    }
+}

@@ -320,3 +320,14 @@ export function setActiveLayerId(layerId) {
 export function getActiveLayerId() {
     return activeLayerId;
 }
+
+/**
+ * Toggle continuous point mode
+ */
+export function toggleContinuousPointMode() {
+    if (window.continuousPointMode) {
+        stopContinuousPointMode();
+    } else {
+        startContinuousPointMode();
+    }
+}
