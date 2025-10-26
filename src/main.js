@@ -61,9 +61,15 @@ async function initializeApplication() {
     console.log('🚀 Initializing CBS GIS Application...');
 
     try {
-        // 0. Initialize database
+        // 0. Initialize database (optional - don't block if it fails)
         console.log('🗄️ Initializing database...');
-        await DB.initDatabase();
+        try {
+            await DB.initDatabase();
+            console.log('✅ Database ready');
+        } catch (dbError) {
+            console.warn('⚠️ Database initialization failed, continuing without persistence');
+            console.error(dbError);
+        }
 
         // 1. Initialize map
         console.log('📍 Initializing map...');
@@ -171,9 +177,14 @@ async function initializeApplication() {
         console.log('🎯 Setting up event listeners...');
         setupEventListeners();
 
-        // 7. Load data from database
+        // 7. Load data from database (optional)
         console.log('📂 Loading data from database...');
-        await loadDataFromDatabase();
+        try {
+            await loadDataFromDatabase();
+        } catch (loadError) {
+            console.warn('⚠️ Could not load data from database');
+            console.error(loadError);
+        }
 
         // 8. Initialize UI components
         console.log('🎨 Initializing UI components...');
@@ -206,7 +217,11 @@ async function initializeApplication() {
         }
 
         // 11. Update database status indicator
-        updateDatabaseStatus();
+        try {
+            updateDatabaseStatus();
+        } catch (statusError) {
+            console.warn('⚠️ Could not update database status');
+        }
 
         console.log('✅ Application initialized successfully!');
 
