@@ -28,9 +28,18 @@ export function applyLabels(layerId) {
 
     layerFeatures.forEach(feature => {
         const featureInfo = window.drawnLayers.find(f => f.id === feature.id);
-        if (!featureInfo || !featureInfo.layer) return;
+        if (!featureInfo || !featureInfo.layer) {
+            console.warn(`⚠️ Feature ${feature.id} has no layer`);
+            return;
+        }
 
         const layer = featureInfo.layer;
+
+        // Check if layer is on map
+        if (!window.map.hasLayer(layer)) {
+            console.warn(`⚠️ Layer ${feature.id} not on map, adding it...`);
+            layer.addTo(window.map);
+        }
 
         if (showLabels) {
             // Get label text from properties
@@ -80,23 +89,41 @@ export function applyLabels(layerId) {
 
             // Bind tooltip
             if (layer.bindTooltip) {
+                // First unbind any existing tooltip
+                if (layer.getTooltip()) {
+                    layer.unbindTooltip();
+                }
+
+                // Bind new tooltip
                 layer.bindTooltip(labelText, {
                     permanent: true,
                     direction: 'center',
                     className: 'feature-label',
                     opacity: 1
-                }).openTooltip(); // Force tooltip to open and render
+                });
 
-                // Apply custom style to tooltip after it's rendered
+                // Force tooltip to open immediately
+                if (layer.openTooltip) {
+                    layer.openTooltip();
+                }
+
+                // Apply custom style after rendering
                 setTimeout(() => {
                     const tooltip = layer.getTooltip();
                     if (tooltip) {
                         const tooltipElement = tooltip.getElement();
                         if (tooltipElement) {
                             tooltipElement.style.cssText = tooltipStyle;
+                            console.log(`✅ Tooltip styled for ${feature.id}: "${labelText}"`);
+                        } else {
+                            console.warn(`⚠️ Tooltip element not found for ${feature.id}`);
                         }
+                    } else {
+                        console.warn(`⚠️ No tooltip for ${feature.id}`);
                     }
-                }, 10); // Small delay to ensure DOM element exists
+                }, 100); // Increased delay for reliability
+            } else {
+                console.warn(`⚠️ Layer ${feature.id} doesn't support tooltips`);
             }
         } else {
             // Remove tooltip
