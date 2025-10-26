@@ -38,6 +38,9 @@ import * as Legend from './modules/ui/legend.js';
 import * as Measurement from './modules/tools/measurement.js';
 import * as Coordinates from './modules/tools/coordinates.js';
 
+// Storage
+import * as DB from './modules/storage/database.js';
+
 /**
  * Global state variables (for backwards compatibility)
  */
@@ -54,10 +57,14 @@ window.drawControl = null;
 /**
  * Initialize the application
  */
-function initializeApplication() {
+async function initializeApplication() {
     console.log('🚀 Initializing CBS GIS Application...');
 
     try {
+        // 0. Initialize database
+        console.log('🗄️ Initializing database...');
+        await DB.initDatabase();
+
         // 1. Initialize map
         console.log('📍 Initializing map...');
         window.map = initializeMap('map');
@@ -106,15 +113,55 @@ function initializeApplication() {
                 window.drawnItems.addLayer(layer);
 
                 // Add to drawnLayers tracking
-                const layerId = window.activeLayerId || 'default-layer';
+                const layerId = window.activeLayerId || window.drawingActiveLayerId || 'default-layer';
+                const featureId = 'feature-' + Date.now();
+
                 window.drawnLayers.push({
-                    id: 'feature-' + Date.now(),
+                    id: featureId,
                     layerId: layerId,
                     layer: layer,
                     type: event.layerType
                 });
 
-                console.log('Feature created:', event.layerType);
+                // Save to database
+                try {
+                    const geometry = layer.toGeoJSON ? layer.toGeoJSON().geometry : null;
+                    if (geometry && layerId !== 'default-layer') {
+                        // Determine feature type
+                        let featureType = 'point';
+                        if (event.layerType === 'polyline') featureType = 'line';
+                        else if (event.layerType === 'polygon' || event.layerType === 'rectangle' || event.layerType === 'circle') featureType = 'polygon';
+
+                        DB.createFeature(featureId, layerId, featureType, geometry, {});
+                        console.log(`✅ Feature saved to database: ${featureId}`);
+                    }
+                } catch (dbError) {
+                    console.error('❌ Error saving feature to database:', dbError);
+                }
+
+                // Update layer features (for layer-manager compatibility)
+                if (window.layerFeatures && layerId !== 'default-layer') {
+                    if (!window.layerFeatures[layerId]) {
+                        window.layerFeatures[layerId] = [];
+                    }
+
+                    let iconType = 'point';
+                    if (event.layerType === 'polyline') iconType = 'line';
+                    else if (event.layerType === 'polygon' || event.layerType === 'rectangle' || event.layerType === 'circle') iconType = 'polygon';
+
+                    window.layerFeatures[layerId].push({
+                        id: featureId,
+                        type: iconType,
+                        layer: layer
+                    });
+
+                    // Update layer icons
+                    if (LayerManager.updateLayerIcons) {
+                        LayerManager.updateLayerIcons(layerId);
+                    }
+                }
+
+                console.log('Feature created:', event.layerType, 'on layer:', layerId);
             });
         } else {
             console.warn('⚠️ Leaflet.Draw not loaded, drawing tools disabled');
@@ -124,11 +171,15 @@ function initializeApplication() {
         console.log('🎯 Setting up event listeners...');
         setupEventListeners();
 
-        // 7. Initialize UI components
+        // 7. Load data from database
+        console.log('📂 Loading data from database...');
+        await loadDataFromDatabase();
+
+        // 8. Initialize UI components
         console.log('🎨 Initializing UI components...');
         initializeUIComponents();
 
-        // 8. Invalidate map size after initialization
+        // 9. Invalidate map size after initialization
         invalidateMapSize(window.map);
 
         // 9. Setup window resize handler
@@ -655,6 +706,171 @@ function handleContextMenu(event) {
 }
 
 /**
+ * Load data from database
+ */
+async function loadDataFromDatabase() {
+    try {
+        console.log('📂 Loading groups, layers, and features from database...');
+
+        // Get all groups
+        const groups = DB.getAllGroups();
+        console.log(`Found ${groups.length} groups in database`);
+
+        // Load each group
+        for (const groupData of groups) {
+            // Create group in UI
+            const groupContainer = document.querySelector('#layerList');
+            if (!groupContainer) continue;
+
+            const layerGroup = document.createElement('div');
+            layerGroup.className = 'layer-group';
+            layerGroup.setAttribute('data-group-id', groupData.id);
+
+            layerGroup.innerHTML = `
+                <div class="group-header">
+                    <div class="group-visibility-area" title="Tüm katmanları aç/kapat">
+                        <input type="checkbox" class="group-visibility-checkbox" checked>
+                    </div>
+                    <div class="group-select-area">
+                        <span class="group-name">${groupData.name}</span>
+                        <span class="group-count">0</span>
+                    </div>
+                    <div class="group-toggle-area">
+                        <span class="group-icon">${groupData.expanded ? '▼' : '▶'}</span>
+                    </div>
+                </div>
+                <div class="group-items ${groupData.expanded ? '' : 'collapsed'}">
+                    <!-- Katmanlar buraya eklenecek -->
+                </div>
+            `;
+
+            groupContainer.appendChild(layerGroup);
+
+            // Load layers for this group
+            const layers = DB.getLayersByGroup(groupData.id);
+            console.log(`Found ${layers.length} layers for group ${groupData.id}`);
+
+            const groupItems = layerGroup.querySelector('.group-items');
+
+            for (const layerData of layers) {
+                // Create layer in UI
+                const layerItem = document.createElement('div');
+                layerItem.className = 'layer-item';
+                layerItem.draggable = true;
+                layerItem.setAttribute('data-layer-id', layerData.id);
+
+                layerItem.innerHTML = `
+                    <input type="checkbox" class="layer-visibility" ${layerData.visible ? 'checked' : ''}>
+                    <div class="layer-selectable-area">
+                        <div class="layer-icons">
+                            <div class="layer-icon inactive" title="Nokta verisi">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="8"/>
+                                </svg>
+                            </div>
+                            <div class="layer-icon inactive" title="Çizgi verisi">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M2 8 L8 8 L12 16 L16 16 L22 8" fill="none" stroke="currentColor" stroke-width="3"/>
+                                </svg>
+                            </div>
+                            <div class="layer-icon inactive" title="Poligon verisi">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <polygon points="12,2 2,10 5,21 19,21 22,10" fill="currentColor" stroke="#000000" stroke-width="1"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="layer-name">${layerData.name}</span>
+                        <span class="layer-style-mode-indicator default-mode" data-layer-id="${layerData.id}" title="Varsayılan Kurumsal Ayarlar">
+                            🏢
+                        </span>
+                    </div>
+                    <div class="layer-actions">
+                        <button class="layer-action-btn" title="Zoom" onclick="zoomToLayer(this)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15.5,14H20.5L19,15.5L21.5,18L20,19.5L17.5,17L16,18.5V13.5H15.5M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L20,19.29L18.71,20.58L13.15,15C12,15.83 10.61,16.36 9.5,16.36A6.5,6.5 0 0,1 3,9.86A6.5,6.5 0 0,1 9.5,3.36V3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                            </svg>
+                        </button>
+                        <button class="layer-action-btn" title="Stil Ayarları">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                            </svg>
+                        </button>
+                        <button class="layer-action-btn" title="Detaylar">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13,7H11V5H13M13,17H11V9H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                            </svg>
+                        </button>
+                        <button class="layer-action-btn" title="Sil">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+
+                groupItems.appendChild(layerItem);
+
+                // Initialize layer features array
+                window.layerFeatures[layerData.id] = [];
+
+                // Load features for this layer
+                const features = DB.getFeaturesByLayer(layerData.id);
+                console.log(`Found ${features.length} features for layer ${layerData.id}`);
+
+                for (const featureData of features) {
+                    try {
+                        // Create Leaflet layer from GeoJSON geometry
+                        const geoJsonLayer = L.geoJSON(featureData.geometry);
+                        const leafletLayer = geoJsonLayer.getLayers()[0];
+
+                        if (leafletLayer && window.drawnItems) {
+                            // Add to map
+                            if (layerData.visible) {
+                                window.drawnItems.addLayer(leafletLayer);
+                            }
+
+                            // Add to layer features
+                            window.layerFeatures[layerData.id].push({
+                                id: featureData.id,
+                                type: featureData.type,
+                                layer: leafletLayer
+                            });
+
+                            // Add to drawn layers
+                            window.drawnLayers.push({
+                                id: featureData.id,
+                                layerId: layerData.id,
+                                layer: leafletLayer,
+                                type: featureData.type,
+                                groupId: groupData.id,
+                                properties: featureData.properties || {}
+                            });
+                        }
+                    } catch (featureError) {
+                        console.error(`Error loading feature ${featureData.id}:`, featureError);
+                    }
+                }
+
+                // Update layer icons based on loaded features
+                if (LayerManager.updateLayerIcons) {
+                    LayerManager.updateLayerIcons(layerData.id);
+                }
+            }
+
+            // Update group layer count
+            if (GroupManager.updateGroupLayerCount) {
+                GroupManager.updateGroupLayerCount(groupData.id);
+            }
+        }
+
+        const stats = DB.getDatabaseStats();
+        console.log(`✅ Loaded ${stats.groups} groups, ${stats.layers} layers, ${stats.features} features`);
+    } catch (error) {
+        console.error('❌ Error loading data from database:', error);
+    }
+}
+
+/**
  * Initialize UI components
  */
 function initializeUIComponents() {
@@ -702,6 +918,7 @@ window.Console = Console;
 window.Legend = Legend;
 window.Measurement = Measurement;
 window.Coordinates = Coordinates;
+window.DB = DB;
 
 /**
  * Wait for external libraries to load

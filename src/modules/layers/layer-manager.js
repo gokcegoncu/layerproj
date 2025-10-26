@@ -3,6 +3,8 @@
  * Handles layer CRUD operations, selection, and feature management
  */
 
+import * as DB from '../storage/database.js';
+
 // Global state references (will be passed via dependency injection in production)
 let activeLayerId = null;
 let activeGroupId = null;
@@ -106,6 +108,10 @@ export function createLayer(layerName, targetGroupId) {
         // Initialize layer features array
         layerFeatures[layerId] = [];
 
+        // Save layer to database
+        const layerPosition = groupItems.children.length;
+        DB.createLayer(layerId, layerName, targetGroupId, layerPosition);
+
         // Select the new layer
         selectLayer(layerItem);
 
@@ -159,6 +165,9 @@ export function deleteLayer(layerIdOrButton) {
         if (layerElement) {
             layerElement.remove();
         }
+
+        // Delete from database
+        DB.deleteLayer(layerId);
 
         // Clear active layer if this was it
         if (activeLayerId === layerId) {
@@ -300,6 +309,16 @@ export function addFeatureToActiveLayer(type, layer, typeName) {
 
         // Update layer icons
         updateLayerIcons(activeLayerId);
+
+        // Save feature to database
+        try {
+            const geometry = layer.toGeoJSON ? layer.toGeoJSON().geometry : null;
+            if (geometry) {
+                DB.createFeature(featureId, activeLayerId, iconType, geometry, {});
+            }
+        } catch (dbError) {
+            console.error('Error saving feature to database:', dbError);
+        }
 
         console.log(`Feature added: ${featureId} to layer ${activeLayerId}`);
         return featureInfo;
