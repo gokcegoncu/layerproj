@@ -301,60 +301,76 @@ function setupEventListeners() {
         });
     }
 
-    // Real-time style updates - Point controls
+    // Debounce timer for real-time updates
+    let styleUpdateTimer = null;
+    let labelUpdateTimer = null;
+
+    // Real-time style updates - Point controls (debounced)
     const pointControls = ['pointColor', 'pointSize', 'pointOpacity', 'pointShape', 'pointStyleType'];
     pointControls.forEach(controlId => {
         const control = document.getElementById(controlId);
         if (control) {
             const eventType = control.type === 'range' ? 'input' : 'change';
             control.addEventListener(eventType, function() {
-                if (StyleManager.applyStyle) {
-                    StyleManager.applyStyle();
-                }
+                clearTimeout(styleUpdateTimer);
+                styleUpdateTimer = setTimeout(() => {
+                    if (StyleManager.applyStyle) {
+                        StyleManager.applyStyle();
+                    }
+                }, 150); // Wait 150ms after user stops changing
             });
         }
     });
 
-    // Real-time style updates - Line controls
+    // Real-time style updates - Line controls (debounced)
     const lineControls = ['lineColor', 'lineWidth', 'lineOpacity', 'lineType'];
     lineControls.forEach(controlId => {
         const control = document.getElementById(controlId);
         if (control) {
             const eventType = control.type === 'range' ? 'input' : 'change';
             control.addEventListener(eventType, function() {
-                if (StyleManager.applyStyle) {
-                    StyleManager.applyStyle();
-                }
+                clearTimeout(styleUpdateTimer);
+                styleUpdateTimer = setTimeout(() => {
+                    if (StyleManager.applyStyle) {
+                        StyleManager.applyStyle();
+                    }
+                }, 150);
             });
         }
     });
 
-    // Real-time style updates - Polygon controls
+    // Real-time style updates - Polygon controls (debounced)
     const polygonControls = ['fillColor', 'fillOpacity', 'strokeColor', 'strokeWidth', 'strokeOpacity', 'strokeType'];
     polygonControls.forEach(controlId => {
         const control = document.getElementById(controlId);
         if (control) {
             const eventType = control.type === 'range' ? 'input' : 'change';
             control.addEventListener(eventType, function() {
-                if (StyleManager.applyStyle) {
-                    StyleManager.applyStyle();
-                }
+                clearTimeout(styleUpdateTimer);
+                styleUpdateTimer = setTimeout(() => {
+                    if (StyleManager.applyStyle) {
+                        StyleManager.applyStyle();
+                    }
+                }, 150);
             });
         }
     });
 
-    // Real-time label updates - Font size and colors
+    // Real-time label updates - Font size and colors (debounced)
     const labelStyleControls = ['fontSize', 'fontColor', 'haloColor', 'haloWidth'];
     labelStyleControls.forEach(controlId => {
         const control = document.getElementById(controlId);
         if (control) {
             const eventType = control.type === 'range' ? 'input' : 'change';
             control.addEventListener(eventType, function() {
-                const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
-                const showLabels = document.getElementById('showLabels')?.checked;
-                if (activeLayerId && activeLayerId !== 'default-layer' && showLabels) {
-                    LabelManager.applyLabels(activeLayerId);
-                }
+                clearTimeout(labelUpdateTimer);
+                labelUpdateTimer = setTimeout(() => {
+                    const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
+                    const showLabels = document.getElementById('showLabels')?.checked;
+                    if (activeLayerId && activeLayerId !== 'default-layer' && showLabels) {
+                        LabelManager.applyLabels(activeLayerId);
+                    }
+                }, 150);
             });
         }
     });
