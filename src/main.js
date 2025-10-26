@@ -20,6 +20,7 @@ import * as StyleManager from './modules/styling/style-manager.js';
 import * as CategorizedStyle from './modules/styling/categorized-style.js';
 import * as GraduatedStyle from './modules/styling/graduated-style.js';
 import * as HeatmapStyle from './modules/styling/heatmap-style.js';
+import * as LabelManager from './modules/styling/label-manager.js';
 
 // Layers
 import * as LayerManager from './modules/layers/layer-manager.js';
@@ -277,6 +278,28 @@ function setupEventListeners() {
 
     // Context menu
     document.addEventListener('contextmenu', handleContextMenu);
+
+    // Label controls event listeners
+    const showLabelsCheckbox = document.getElementById('showLabels');
+    if (showLabelsCheckbox) {
+        showLabelsCheckbox.addEventListener('change', function() {
+            const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
+            if (activeLayerId && activeLayerId !== 'default-layer') {
+                LabelManager.applyLabels(activeLayerId);
+            }
+        });
+    }
+
+    const labelField = document.getElementById('labelField');
+    if (labelField) {
+        labelField.addEventListener('change', function() {
+            const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
+            const showLabels = document.getElementById('showLabels')?.checked;
+            if (activeLayerId && activeLayerId !== 'default-layer' && showLabels) {
+                LabelManager.applyLabels(activeLayerId);
+            }
+        });
+    }
 }
 
 /**
@@ -953,17 +976,23 @@ function handleAction(action, element, event) {
             GraduatedStyle.applyGraduatedStyle && GraduatedStyle.applyGraduatedStyle();
             break;
         case 'apply-heatmap-visualization':
-            console.log('Apply heatmap visualization');
-            HeatmapStyle.applyHeatmapStyle && HeatmapStyle.applyHeatmapStyle();
+            HeatmapStyle.applyHeatmapVisualization && HeatmapStyle.applyHeatmapVisualization();
             break;
         case 'remove-heatmap-visualization':
-            console.log('Remove heatmap visualization');
             HeatmapStyle.removeHeatmapVisualization && HeatmapStyle.removeHeatmapVisualization();
             break;
-        case 'save-and-close-style':
+        case 'save-and-close-style': {
             StyleManager.applyStyle && StyleManager.applyStyle();
+
+            // Apply labels if enabled
+            const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
+            if (activeLayerId && activeLayerId !== 'default-layer') {
+                LabelManager.applyLabels(activeLayerId);
+            }
+
             StyleManager.closeStyleModal && StyleManager.closeStyleModal();
             break;
+        }
 
         // Legend actions (additional)
         case 'close-legend':
