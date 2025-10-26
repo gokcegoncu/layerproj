@@ -35,20 +35,16 @@
             <div class="panel-header">
                 <h2>🗺️ Simple Test (No Database)</h2>
             </div>
-            <div class="create-buttons">
-                <button onclick="testMap()">Test Map</button>
-                <button onclick="testDrawing()">Test Drawing</button>
-                <button onclick="createDemoData()">🎲 Create Demo Data</button>
-                <button onclick="createHeatmap()">🔥 Create Heatmap</button>
-                <button onclick="removeHeatmap()">❌ Remove Heatmap</button>
-            </div>
-        </div>
-
-        <div class="toolbar">
-            <div class="tool-group">
-                <button id="markerBtn" class="tool-btn" title="Nokta">📍</button>
-                <button id="polylineBtn" class="tool-btn" title="Çizgi">📏</button>
-                <button id="polygonBtn" class="tool-btn" title="Poligon">▭</button>
+            <div class="create-buttons" style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="createDemoData()" style="padding: 15px; font-size: 16px; font-weight: bold;">
+                    🎲 1. Create Demo Data (50 points)
+                </button>
+                <button onclick="createHeatmap()" style="padding: 15px; font-size: 16px; font-weight: bold; background: linear-gradient(135deg, #ff6b6b, #ee5a6f);">
+                    🔥 2. Create Heatmap
+                </button>
+                <button onclick="removeHeatmap()" style="padding: 10px; font-size: 14px;">
+                    ❌ 3. Remove Heatmap
+                </button>
             </div>
         </div>
 
@@ -56,12 +52,9 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4/2.9.2/proj4.js"></script>
-    <script src="https://unpkg.com/proj4leaflet@1.0.2/dist/proj4leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
-    <script type="module">
+    <script>
         const consoleDiv = document.getElementById('console');
 
         function log(msg, isError = false) {
@@ -80,7 +73,7 @@
                 // Wait for libraries
                 await new Promise((resolve) => {
                     const check = () => {
-                        if (window.L && window.L.Draw && window.proj4) {
+                        if (window.L && window.L.heatLayer) {
                             resolve();
                         } else {
                             setTimeout(check, 50);
@@ -88,47 +81,27 @@
                     };
                     check();
                 });
-                log('✅ External libraries loaded');
+                log('✅ External libraries loaded (Leaflet + Leaflet.heat)');
 
-                // Import core modules (without database)
-                log('📦 Importing core modules...');
-                const { initializeMap, createDrawnItemsLayer } = await import('/modules/core/map.js');
-                log('✅ Core modules loaded');
-
-                // Initialize map
+                // Initialize map directly (no module imports)
                 log('🗺️ Initializing map...');
-                window.map = initializeMap('map');
-                window.drawnItems = createDrawnItemsLayer(window.map);
+                window.map = L.map('map').setView([39.9334, 32.8597], 6);
+
+                // Add OpenStreetMap tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(window.map);
+
                 log('✅ Map initialized');
 
-                // Setup draw control
-                log('✏️ Setting up drawing controls...');
-                window.drawControl = new L.Control.Draw({
-                    draw: {
-                        polyline: true,
-                        polygon: true,
-                        marker: true,
-                        rectangle: true,
-                        circle: true,
-                        circlemarker: false
-                    },
-                    edit: {
-                        featureGroup: window.drawnItems,
-                        remove: true
-                    }
-                });
-                window.map.addControl(window.drawControl);
-                log('✅ Drawing controls ready');
-
-                // Setup draw events
-                window.map.on(L.Draw.Event.CREATED, function (event) {
-                    const layer = event.layer;
-                    window.drawnItems.addLayer(layer);
-                    log(`✅ Feature created: ${event.layerType}`);
-                });
+                // Create feature group for drawn items
+                window.drawnItems = new L.FeatureGroup();
+                window.map.addLayer(window.drawnItems);
+                log('✅ Feature group created');
 
                 log('✅✅✅ Application initialized successfully! ✅✅✅');
-                log('Map should be visible below');
+                log('🎲 Click "Create Demo Data" to start!');
 
             } catch (error) {
                 log(`❌ ERROR: ${error.message}`, true);
@@ -136,31 +109,6 @@
                 console.error(error);
             }
         }
-
-        window.testMap = () => {
-            if (window.map) {
-                log('✅ Map exists!');
-                log(`Zoom: ${window.map.getZoom()}, Center: ${window.map.getCenter()}`);
-                window.map.setView([39.9334, 32.8597], 8);
-            } else {
-                log('❌ Map not initialized', true);
-            }
-        };
-
-        window.testDrawing = () => {
-            if (window.drawControl) {
-                log('✅ Draw control exists!');
-                const markerTool = window.drawControl._toolbars.draw._modes.marker;
-                if (markerTool && markerTool.handler) {
-                    markerTool.handler.enable();
-                    log('✅ Marker drawing enabled');
-                } else {
-                    log('❌ Marker tool not found', true);
-                }
-            } else {
-                log('❌ Draw control not initialized', true);
-            }
-        };
 
         // Demo data storage
         window.demoPoints = [];
