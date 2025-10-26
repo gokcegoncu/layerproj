@@ -1297,6 +1297,14 @@
     display: none !important;
 }
 
+/* Invisible marker for label positioning */
+.invisible-label-marker {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
 .measurement-tooltip::before {
     display: none !important;
 }

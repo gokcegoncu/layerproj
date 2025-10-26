@@ -92,58 +92,64 @@ export function applyLabels(layerId) {
                 labelText = `[${labelField}]`;
             }
 
-            // Create tooltip style
-            const tooltipStyle = `
-                background: ${haloColor};
-                border: ${haloWidth}px solid ${haloColor};
-                color: ${fontColor};
-                font-size: ${fontSize}px;
-                font-weight: 500;
-                padding: 4px 8px;
-                border-radius: 4px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                white-space: nowrap;
-            `;
-
-            // Remove any existing tooltip first
-            if (layer._customTooltip) {
-                window.map.removeLayer(layer._customTooltip);
-                layer._customTooltip = null;
-            }
-            if (layer.getTooltip()) {
-                layer.unbindTooltip();
+            // Remove any existing label marker
+            if (layer._labelMarker) {
+                window.map.removeLayer(layer._labelMarker);
+                layer._labelMarker = null;
             }
 
-            // Create standalone tooltip with explicit position
-            const tooltip = L.tooltip({
+            // Create invisible marker at label position
+            const invisibleIcon = L.divIcon({
+                html: '',
+                className: 'invisible-label-marker',
+                iconSize: [0, 0]
+            });
+
+            const labelMarker = L.marker(labelLatLng, {
+                icon: invisibleIcon,
+                interactive: false
+            });
+
+            // Bind tooltip to marker with custom styling
+            labelMarker.bindTooltip(labelText, {
                 permanent: true,
                 direction: 'center',
                 className: 'feature-label',
                 opacity: 1,
                 offset: [0, 0]
-            })
-            .setLatLng(labelLatLng)
-            .setContent(labelText)
-            .addTo(window.map);
+            });
 
-            // Store reference on layer for cleanup
-            layer._customTooltip = tooltip;
+            // Add to map
+            labelMarker.addTo(window.map);
 
-            // Apply custom styles
+            // Store reference on original layer for cleanup
+            layer._labelMarker = labelMarker;
+
+            // Apply custom styles to tooltip
             setTimeout(() => {
-                const tooltipElement = tooltip.getElement();
-                if (tooltipElement) {
-                    tooltipElement.style.cssText = tooltipStyle;
+                const tooltip = labelMarker.getTooltip();
+                if (tooltip) {
+                    const tooltipElement = tooltip.getElement();
+                    if (tooltipElement) {
+                        tooltipElement.style.cssText = `
+                            background: ${haloColor} !important;
+                            border: ${haloWidth}px solid ${haloColor} !important;
+                            color: ${fontColor} !important;
+                            font-size: ${fontSize}px !important;
+                            font-weight: 500 !important;
+                            padding: 4px 8px !important;
+                            border-radius: 4px !important;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+                            white-space: nowrap !important;
+                        `;
+                    }
                 }
             }, 50);
         } else {
-            // Remove tooltip
-            if (layer._customTooltip) {
-                window.map.removeLayer(layer._customTooltip);
-                layer._customTooltip = null;
-            }
-            if (layer.unbindTooltip) {
-                layer.unbindTooltip();
+            // Remove label marker
+            if (layer._labelMarker) {
+                window.map.removeLayer(layer._labelMarker);
+                layer._labelMarker = null;
             }
         }
     });
@@ -173,15 +179,10 @@ export function removeLabels(layerId) {
         if (featureInfo && featureInfo.layer) {
             const layer = featureInfo.layer;
 
-            // Remove custom tooltip
-            if (layer._customTooltip) {
-                window.map.removeLayer(layer._customTooltip);
-                layer._customTooltip = null;
-            }
-
-            // Remove bound tooltip
-            if (layer.unbindTooltip) {
-                layer.unbindTooltip();
+            // Remove label marker if exists
+            if (layer._labelMarker) {
+                window.map.removeLayer(layer._labelMarker);
+                layer._labelMarker = null;
             }
         }
     });

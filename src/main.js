@@ -826,7 +826,7 @@ function handleAction(action, element, event) {
             if (showLabelsNow) {
                 // Open style modal to labels tab
                 if (StyleManager.openStyleModal) {
-                    StyleManager.openStyleModal();
+                    StyleManager.openStyleModal(null, layerId);
                 }
 
                 // Switch to label tab
