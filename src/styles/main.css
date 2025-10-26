@@ -1,0 +1,29 @@
+/* ============================================
+   MAIN STYLESHEET
+   GIS Layer Management Application
+   ============================================
+
+   This file imports all modular CSS files in the correct order.
+
+   Import Order:
+   1. Variables - CSS custom properties and design tokens
+   2. Reset - Global resets and base styles
+   3. Layout - Main layout structure and positioning
+   4. Components - UI components and interactive elements
+   5. Themes - Theme-specific overrides (dark mode, etc.)
+   ============================================ */
+
+/* 1. Design System Variables */
+@import url('variables.css');
+
+/* 2. Global Resets & Base Styles */
+@import url('reset.css');
+
+/* 3. Layout Structure */
+@import url('layout.css');
+
+/* 4. UI Components */
+@import url('components.css');
+
+/* 5. Theme Overrides */
+@import url('themes.css');

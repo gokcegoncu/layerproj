@@ -1,0 +1,18 @@
+# Build outputs
+dist
+build
+coverage
+
+# Dependencies
+node_modules
+
+# Old versions
+cbs_katman_yonetim_v*.html
+
+# Logs
+*.log
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

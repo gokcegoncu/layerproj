@@ -1,0 +1,83 @@
+/* ============================================
+   CSS VARIABLES - DESIGN SYSTEM
+   ============================================ */
+
+/* Light Theme Variables */
+:root {
+    /* Primary Colors */
+    --primary-color: #2196f3;
+    --secondary-color: #f5f5f5;
+    --accent-color: #ff9800;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --error-color: #dc3545;
+
+    /* Text Colors */
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-muted: #6c757d;
+    --text-inverse: #ffffff;
+    --text-dark: #333;
+
+    /* Background Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --bg-dark: #495057;
+    --bg-darker: #343a40;
+
+    /* Border Colors */
+    --border-color: #e0e0e0;
+    --border-light: #dee2e6;
+    --border-dark: #6c757d;
+    --border-medium: #6c757d;
+
+    /* Shadows */
+    --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-heavy: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+    /* Border Radius */
+    --radius-small: 4px;
+    --radius-medium: 6px;
+    --radius-large: 8px;
+    --radius-xl: 12px;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-xxl: 24px;
+
+    /* Font Sizes */
+    --font-size-xs: 10px;
+    --font-size-sm: 11px;
+    --font-size-base: 12px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+
+    /* Font Families */
+    --font-mono: 'Monaco', 'Consolas', 'Courier New', monospace;
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    --transition-slow: 0.3s ease;
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+    --bg-primary: #2d3748;
+    --bg-secondary: #1a202c;
+    --bg-tertiary: #4a5568;
+    --text-primary: #ffffff;
+    --text-secondary: #e2e8f0;
+    --text-muted: #a0aec0;
+    --border-color: #4a5568;
+    --border-light: #2d3748;
+}

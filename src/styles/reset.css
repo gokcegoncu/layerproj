@@ -1,0 +1,116 @@
+/* ============================================
+   GLOBAL RESETS & BASE STYLES
+   ============================================ */
+
+/* Box Model & Transition Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: background-color var(--transition-base),
+                border-color var(--transition-base),
+                box-shadow var(--transition-base),
+                transform var(--transition-base),
+                color var(--transition-base);
+}
+
+/* Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Screen Reader Only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Skip Link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--primary-color);
+    color: var(--text-inverse);
+    padding: 8px;
+    text-decoration: none;
+    border-radius: var(--radius-small);
+    z-index: 10000;
+    transition: top var(--transition-base);
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* ============================================
+   MEDIA QUERIES - ACCESSIBILITY
+   ============================================ */
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .layer-panel {
+        border: 2px solid #000;
+        background: #fff;
+    }
+
+    .layer-item, .group-header {
+        border: 1px solid #000;
+    }
+
+    .tool-btn {
+        border: 1px solid #000;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .layer-item:hover,
+    .group-header:hover,
+    .tool-btn:hover {
+        transform: none !important;
+    }
+}
+
+/* ============================================
+   FOCUS STATES
+   ============================================ */
+
+.layer-item:focus,
+.tool-btn:focus,
+.group-header:focus,
+.btn:focus,
+.add-layer-btn:focus,
+.filter-btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+}
+
+/* Keyboard Navigation */
+.layer-item:focus,
+.group-header:focus {
+    background: rgba(33, 150, 243, 0.1);
+    border-color: var(--primary-color);
+}
