@@ -291,6 +291,58 @@ export function openImportModal() {
 }
 
 /**
+ * Show create group modal
+ */
+export function showCreateGroupModal() {
+    showModal('createModal');
+    // Set modal mode to group creation
+    const modal = document.getElementById('createModal');
+    if (modal) {
+        modal.setAttribute('data-create-type', 'group');
+    }
+}
+
+/**
+ * Show create layer modal
+ */
+export function showCreateLayerModal() {
+    showModal('createModal');
+    // Set modal mode to layer creation
+    const modal = document.getElementById('createModal');
+    if (modal) {
+        modal.setAttribute('data-create-type', 'layer');
+    }
+}
+
+/**
+ * Show layer properties modal
+ * @param {HTMLElement} element - Layer element
+ */
+export function showLayerProperties(element) {
+    const layerItem = element.closest('.layer-item');
+    if (layerItem) {
+        const layerId = layerItem.getAttribute('data-layer-id');
+        showModal('layerPropertiesModal');
+        const modal = document.getElementById('layerPropertiesModal');
+        if (modal) {
+            modal.setAttribute('data-layer-id', layerId);
+        }
+    }
+}
+
+/**
+ * Open layer details (alias for openLayerDetailsModal)
+ * @param {HTMLElement} element - Layer element
+ */
+export function openLayerDetails(element) {
+    const layerItem = element.closest('.layer-item');
+    if (layerItem) {
+        const layerId = layerItem.getAttribute('data-layer-id');
+        openLayerDetailsModal(layerId);
+    }
+}
+
+/**
  * Initialize all modal functionality
  */
 export function initializeModals() {
