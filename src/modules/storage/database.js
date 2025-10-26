@@ -3,11 +3,34 @@
  * Handles SQLite database operations for persisting layers, groups, and features
  */
 
-import initSqlJs from 'sql.js';
-
 // Database instance
 let db = null;
 let SQL = null;
+
+/**
+ * Load SQL.js from CDN dynamically
+ */
+async function loadSqlJs() {
+    // Check if already loaded
+    if (window.initSqlJs) {
+        return window.initSqlJs;
+    }
+
+    // Load from CDN
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
+        script.onload = () => {
+            if (window.initSqlJs) {
+                resolve(window.initSqlJs);
+            } else {
+                reject(new Error('sql.js failed to load'));
+            }
+        };
+        script.onerror = () => reject(new Error('Failed to load sql.js from CDN'));
+        document.head.appendChild(script);
+    });
+}
 
 /**
  * Initialize the database
@@ -16,7 +39,10 @@ export async function initDatabase() {
     try {
         console.log('🗄️ Initializing database...');
 
-        // Initialize SQL.js - Use CDN for WASM file
+        // Load SQL.js dynamically from CDN
+        const initSqlJs = await loadSqlJs();
+
+        // Initialize SQL.js with WASM file location
         SQL = await initSqlJs({
             locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
         });
