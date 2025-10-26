@@ -987,13 +987,7 @@ function handleAction(action, element, event) {
             // Store the active layer for attribute assignment
             window.attributeAssignmentLayerId = activeLayerId;
 
-            // Clear and show modal
-            document.getElementById('attrName').value = '';
-            document.getElementById('attrDescription').value = '';
-            document.getElementById('attrValue').value = '';
-            document.getElementById('attrCategory').value = '';
-            document.getElementById('attrCustom').value = '';
-
+            // Show modal (no need to clear fields since we removed manual inputs)
             const modal = document.getElementById('attributeEditorModal');
             if (modal) {
                 modal.style.display = 'block';
