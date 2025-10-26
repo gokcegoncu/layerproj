@@ -503,13 +503,15 @@ export function applyStyleToFeature(featureId, type) {
         // Define dashArray for line style
         const dashArray = calculateDashArray(lineType, lineWidth);
 
-        // Apply style
-        layer.setStyle({
-            color: lineColor,
-            weight: lineWidth,
-            opacity: lineOpacity,
-            dashArray: dashArray
-        });
+        // Apply style if method exists
+        if (layer.setStyle) {
+            layer.setStyle({
+                color: lineColor,
+                weight: lineWidth,
+                opacity: lineOpacity,
+                dashArray: dashArray
+            });
+        }
 
         // Add or update popup info
         const popupContent = `<div style="color:${lineColor}"><strong>Line</strong><br>Width: ${lineWidth}px<br>Opacity: ${Math.round(lineOpacity * 100)}%<br>Type: ${lineType}</div>`;
@@ -530,15 +532,17 @@ export function applyStyleToFeature(featureId, type) {
         // Define dashArray for stroke style
         const dashArray = calculateDashArray(strokeType, strokeWidth);
 
-        // Apply style
-        layer.setStyle({
-            fillColor: fillColor,
-            fillOpacity: fillOpacity,
-            color: strokeColor,
-            weight: strokeWidth,
-            opacity: strokeOpacity,
-            dashArray: dashArray
-        });
+        // Apply style if method exists
+        if (layer.setStyle) {
+            layer.setStyle({
+                fillColor: fillColor,
+                fillOpacity: fillOpacity,
+                color: strokeColor,
+                weight: strokeWidth,
+                opacity: strokeOpacity,
+                dashArray: dashArray
+            });
+        }
 
         // Add or update popup info
         const popupContent = `<div style="color:${fillColor}"><strong>Polygon</strong><br>Fill Opacity: ${Math.round(fillOpacity * 100)}%<br>Stroke Width: ${strokeWidth}px<br>Stroke Opacity: ${Math.round(strokeOpacity * 100)}%</div>`;
