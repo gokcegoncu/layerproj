@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBS Katman Yönetim Sistemi v3.9</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
+  <!-- Our modular CSS -->
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Katman Paneli -->
+        <div class="layer-panel">
+            <div class="panel-header">
+                <h2>
+                    <span style="font-size: 18px; color: #ffc107;">🗂️</span>
+                    Katmanlar
+                </h2>
+                <div class="header-actions">
+                    <button class="filter-btn" title="Filtrele" data-action="toggle-layer-filter">
+                        <span style="font-size: 14px;">🔍</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Arama ve Filtre -->
+            <div class="search-filter-panel" id="searchFilterPanel" style="display: none;">
+                <div style="padding: 10px; border-bottom: 1px solid #dee2e6;">
+                    <input type="text" id="layerSearch" placeholder="Katman ara..." style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                    <!-- Tip seçimi kaldırıldı -->
+                </div>
+            </div>
+            <!-- Seçili Bilgi Paneli -->
+            <div class="selected-info-panel" id="selectedInfoPanel" style="display: none; padding: 6px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-light);">
+                <!-- Seçili grup/katman bilgisi buraya gelecek -->
+            </div>
+
+            <div class="create-buttons">
+                <!-- Ana Aksiyon Butonları -->
+                <div class="primary-actions">
+                    <button class="create-group-btn" title="Yeni Grup Oluştur" data-action="show-create-group-modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            <path d="M12 11v6"/>
+                            <path d="M9 14h6"/>
+                        </svg>
+                        Grup Ekle
+                    </button>
+                    <button class="create-layer-btn" title="Yeni Katman Oluştur" data-action="show-create-layer-modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
+                        </svg>
+                        Katman Ekle
+                    </button>
+                </div>
+                
+                <!-- İkincil Aksiyon Butonları -->
+                <div class="secondary-actions">
+                    <button class="expand-all-btn" title="Tüm Grupları Aç" data-action="expand-all-groups">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="7,13 12,18 17,13"/>
+                            <polyline points="7,6 12,11 17,6"/>
+                        </svg>
+                        Tümünü Aç
+                    </button>
+                    <button class="collapse-all-btn" title="Tüm Grupları Kapat" data-action="collapse-all-groups">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="17,11 12,6 7,11"/>
+                            <polyline points="17,18 12,13 7,18"/>
+                        </svg>
+                        Tümünü Kapat
+                    </button>
+                </div>
+
+            </div>
+            <div class="layer-list" id="layerList">
+                <!-- Temel Harita Grubu -->
+                <div class="layer-group" data-group-id="group-1">
+                    <div class="group-header">
+                        <div class="group-visibility-area" title="Tüm katmanları aç/kapat">
+                            <input type="checkbox" class="group-visibility-checkbox" checked data-action="toggle-all-layers-in-group">
+                        </div>
+                        <div class="group-select-area" data-action="select-group">
+                            <span class="group-name">Temel Haritalar</span>
+                            <span class="group-count">2</span>
+                        </div>
+                        <div class="group-toggle-area" data-action="toggle-group">
+                            <span class="group-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" draggable="true" data-layer-id="osm-layer">
+                            <input type="checkbox" class="layer-visibility" checked>
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon inactive" title="Bu katmanda nokta veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda çizgi veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12L20 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon active icon-polygon" title="Harita altlığı">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">OpenStreetMap</span>
+                                <span class="layer-style-mode-indicator default-mode" data-layer-id="osm-layer" title="Stil Modu: Sistem Varsayılanları">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/>
+                                        <path d="m9 12 2 2 4-4"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" data-action="show-layer-properties">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="12" r="8"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Detaylar" data-action="open-layer-details">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8V12M12 16H12.01" stroke="white" stroke-width="2"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M6 6L18 18M6 18L18 6"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="layer-item" draggable="true" data-layer-id="satellite-layer">
+                            <input type="checkbox" class="layer-visibility">
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon inactive" title="Bu katmanda nokta veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda çizgi veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12L20 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon active icon-polygon" title="Uydu görüntüsü">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">Uydu Görüntüsü</span>
+                                <span class="layer-style-mode-indicator default-mode" data-layer-id="satellite-layer" title="Stil Modu: Sistem Varsayılanları">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/>
+                                        <path d="m9 12 2 2 4-4"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Özellikler" data-action="show-layer-properties">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="12" r="8"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Detaylar" data-action="open-layer-details">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 8V12M12 16H12.01" stroke="white" stroke-width="2"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M6 6L18 18M6 18L18 6"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vektör Veri Grubu -->
+                <div class="layer-group" data-group-id="group-2">
+                    <div class="group-header">
+                        <div class="group-visibility-area" title="Tüm katmanları aç/kapat">
+                            <input type="checkbox" class="group-visibility-checkbox" checked data-action="toggle-all-layers-in-group">
+                        </div>
+                        <div class="group-select-area" data-action="select-group">
+                            <span class="group-name">Vektör Veriler</span>
+                            <span class="group-count">3</span>
+                        </div>
+                        <div class="group-toggle-area" data-action="toggle-group">
+                            <span class="group-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" draggable="true" data-layer-id="province-boundaries">
+                            <input type="checkbox" class="layer-visibility" checked>
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon inactive" title="Bu katmanda nokta veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda çizgi veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12L20 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon active icon-polygon" title="Poligon verisi aktif">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="12,2 2,10 5,21 19,21 22,10"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">İl Sınırları</span>
+                                <span class="layer-style-mode-indicator default-mode" data-layer-id="province-boundaries" title="Stil Modu: Sistem Varsayılanları">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/>
+                                        <path d="m9 12 2 2 4-4"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Sorgu" data-action="open-query-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <path d="M21 21L16.65 16.65"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal:polygon">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="12" r="8"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Zoom" data-action="zoom-to-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <path d="M21 21L16.65 16.65"/>
+                                        <path d="M11 8V14M8 11H14"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M6 6L18 18M6 18L18 6"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="layer-item" draggable="true" data-layer-id="road-network">
+                            <input type="checkbox" class="layer-visibility" checked>
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon inactive" title="Bu katmanda nokta veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon active icon-line" title="Çizgi verisi aktif">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M2 8L8 8L12 16L16 16L22 8"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda poligon veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="12,2 2,10 5,21 19,21 22,10"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">Yol Ağı</span>
+                                <span class="layer-style-mode-indicator default-mode" data-layer-id="road-network" title="Stil Modu: Sistem Varsayılanları">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/>
+                                        <path d="m9 12 2 2 4-4"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Sorgu" data-action="open-query-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal:line">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Zoom" data-action="zoom-to-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M15.5,14H20.5L19,15.5L21.5,18L20,19.5L17.5,17L16,18.5V13.5H15.5M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L20,19.29L18.71,20.58L13.15,15C12,15.83 10.61,16.36 9.5,16.36A6.5,6.5 0 0,1 3,9.86A6.5,6.5 0 0,1 9.5,3.36V3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="layer-item" draggable="true" data-layer-id="city-centers">
+                            <input type="checkbox" class="layer-visibility" checked>
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon active icon-point" title="Nokta verisi aktif">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda çizgi veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12L20 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda poligon veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="12,2 2,10 5,21 19,21 22,10"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">Şehir Merkezleri</span>
+                                <span class="layer-style-mode-indicator default-mode" data-layer-id="city-centers" title="Stil Modu: Sistem Varsayılanları">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/>
+                                        <path d="m9 12 2 2 4-4"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Sorgu" data-action="open-query-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal:point">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Zoom" data-action="zoom-to-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M15.5,14H20.5L19,15.5L21.5,18L20,19.5L17.5,17L16,18.5V13.5H15.5M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L20,19.29L18.71,20.58L13.15,15C12,15.83 10.61,16.36 9.5,16.36A6.5,6.5 0 0,1 3,9.86A6.5,6.5 0 0,1 9.5,3.36V3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nesne Tabanlı Veriler -->
+                <div class="layer-group" data-group-id="group-3">
+                    <div class="group-header">
+                        <div class="group-visibility-area" title="Tüm katmanları aç/kapat">
+                            <input type="checkbox" class="group-visibility-checkbox" checked data-action="toggle-all-layers-in-group">
+                        </div>
+                        <div class="group-select-area" data-action="select-group">
+                            <span class="group-name">Nesne Verileri</span>
+                            <span class="group-count">2</span>
+                        </div>
+                        <div class="group-toggle-area" data-action="toggle-group">
+                            <span class="group-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="group-items">
+                        <div class="layer-item" draggable="true" data-layer-id="buildings">
+                            <input type="checkbox" class="layer-visibility" checked>
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon active icon-point" title="Bina noktaları">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda çizgi veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12L20 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon active icon-polygon" title="Bina poligonları">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <rect x="3" y="3" width="18" height="18"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">Binalar</span>
+                                <span class="layer-style-mode-indicator default-mode" data-layer-id="buildings" title="Stil Modu: Sistem Varsayılanları">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/>
+                                        <path d="m9 12 2 2 4-4"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Sorgu" data-action="open-query-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Zoom" data-action="zoom-to-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M15.5,14H20.5L19,15.5L21.5,18L20,19.5L17.5,17L16,18.5V13.5H15.5M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L20,19.29L18.71,20.58L13.15,15C12,15.83 10.61,16.36 9.5,16.36A6.5,6.5 0 0,1 3,9.86A6.5,6.5 0 0,1 9.5,3.36V3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="layer-item" draggable="true" data-layer-id="land-use">
+                            <input type="checkbox" class="layer-visibility" checked>
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon inactive" title="Bu katmanda nokta veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda çizgi veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12L20 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon active icon-polygon" title="Arazi kullanımı">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="12,2 2,10 5,21 19,21 22,10"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">Arazi Kullanımı</span>
+                                <span class="layer-style-mode-indicator custom-mode" data-layer-id="land-use" title="Stil Modu: Özelleştirilmiş">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Sorgu" data-action="open-query-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Zoom" data-action="zoom-to-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M15.5,14H20.5L19,15.5L21.5,18L20,19.5L17.5,17L16,18.5V13.5H15.5M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L20,19.29L18.71,20.58L13.15,15C12,15.83 10.61,16.36 9.5,16.36A6.5,6.5 0 0,1 3,9.86A6.5,6.5 0 0,1 9.5,3.36V3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Çim Alanları Katmanı -->
+                        <div class="layer-item" draggable="true" data-layer-id="grass-layer">
+                            <input type="checkbox" class="layer-visibility" checked>
+                            <div class="layer-selectable-area">
+                                <div class="layer-icons">
+                                    <div class="layer-icon inactive" title="Bu katmanda nokta veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon inactive" title="Bu katmanda çizgi veri yok">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 12L20 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="layer-icon active icon-polygon" title="Çim alanları" style="color: #77cc33;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="12,2 2,10 5,21 19,21 22,10"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span class="layer-name">Çim Alanları</span>
+                                <span class="layer-style-mode-indicator custom-mode" data-layer-id="grass-layer" title="Stil Modu: Özelleştirilmiş">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="layer-actions">
+                                <button class="layer-action-btn" title="Sorgu" data-action="open-query-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Stil Ayarları" data-action="open-style-modal">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Zoom" data-action="zoom-to-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M15.5,14H20.5L19,15.5L21.5,18L20,19.5L17.5,17L16,18.5V13.5H15.5M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L20,19.29L18.71,20.58L13.15,15C12,15.83 10.61,16.36 9.5,16.36A6.5,6.5 0 0,1 3,9.86A6.5,6.5 0 0,1 9.5,3.36V3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                    </svg>
+                                </button>
+                                <button class="layer-action-btn" title="Sil" data-action="delete-layer">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Harita Alanı -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <!-- Status Bar - Koordinat ve Ölçek -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <div class="coordinate-display">
+                        <span class="status-label">Koordinat:</span>
+                        <div class="coordinate-item" id="coordinateX">X: -</div>
+                        <div class="coordinate-item" id="coordinateY">Y: -</div>
+                    </div>
+                    <div class="scale-display">
+                        <span class="status-label">Ölçek:</span>
+                        <div class="scale-bar" id="scaleBar"></div>
+                        <span class="scale-text" id="scaleText" title="Tek tık: ölçek seç, Çift tık: dinamik moda geç" data-action="toggle-scale-selector" data-dblclick="switch-to-dynamic-scale">1:1,000,000</span>
+                        <div class="scale-selector" id="scaleSelector">
+                            <div class="scale-option" data-action="set-fixed-scale">1:1,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:2,500</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:5,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:10,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:25,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:50,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:100,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:250,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:500,000</div>
+                            <div class="scale-option" data-action="set-fixed-scale">1:1,000,000</div>
+                            <div class="scale-option" style="border-top: 1px solid #dee2e6; margin-top: 4px; padding-top: 8px;" data-action="set-dynamic-scale">
+                                <strong>Dinamik Ölçek</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-right">
+                    <div class="active-layer-display" id="activeLayerDisplay" style="margin-right: 15px;">
+                        <span class="status-label">Aktif Katman:</span>
+                        <span id="activeLayerInfo" style="font-weight: 500; color: var(--primary-color);">-</span>
+                    </div>
+                    <div class="projection-selector">
+                        <span class="status-label">Projeksiyon:</span>
+                        <select class="projection-select" id="projectionSelect" data-change="change-projection">
+                            <option value="EPSG:4326">WGS84 (EPSG:4326)</option>
+                            <option value="EPSG:3857">Web Mercator (EPSG:3857)</option>
+                            <option value="EPSG:5254">ITRF96 / UTM 35N (EPSG:5254)</option>
+                            <option value="EPSG:2320">ED50 / TM30 (EPSG:2320)</option>
+                            <option value="EPSG:32635">WGS84 / UTM 35N (EPSG:32635)</option>
+                            <option value="EPSG:32636">WGS84 / UTM 36N (EPSG:32636)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Context Menu -->
+            <div class="context-menu" id="contextMenu">
+                <div class="menu-item" data-action="context-menu-action:zoom">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+                        <path d="M15.5,14H20.5L19,15.5L21.5,18L20,19.5L17.5,17L16,18.5V13.5H15.5M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L20,19.29L18.71,20.58L13.15,15C12,15.83 10.61,16.36 9.5,16.36A6.5,6.5 0 0,1 3,9.86A6.5,6.5 0 0,1 9.5,3.36V3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                    </svg>
+                    Zoom
+                </div>
+                <div class="menu-item" data-action="context-menu-action:style">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                    </svg>
+                    Stil
+                </div>
+                <div class="menu-item" data-action="context-menu-action:properties">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                    </svg>
+                    Özellikler
+                </div>
+                <div class="menu-item" data-action="context-menu-action:delete">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+                        <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                    </svg>
+                    Sil
+                </div>
+            </div>
+            
+            <!-- Lejant Toggle Butonu - Artık çizim araçları ile birlikte -->
+
+            <!-- Lejant Container -->
+            <div class="legend-container" id="legendContainer">
+                <div class="legend-header" id="legendHeader">
+                    <div class="legend-title">Katman Lejantı</div>
+                    <div class="legend-controls">
+                        <button class="legend-btn" title="Ayarlar" id="legendSettingsBtn" data-action="toggle-legend-settings">⚙</button>
+                        <button class="legend-btn" title="Daralt/Genişlet" id="legendCollapseBtn" data-action="toggle-legend-content">−</button>
+                        <button class="legend-btn" title="Kapat" data-action="close-legend">×</button>
+                    </div>
+                </div>
+                <div class="legend-settings" id="legendSettings" style="display: none;">
+                    <div class="legend-setting-item">
+                        <input type="checkbox" id="showEmptyLayers" data-change="update-legend-content">
+                        <label for="showEmptyLayers">Boş katmanları göster</label>
+                    </div>
+                    <div class="legend-setting-item">
+                        <input type="checkbox" id="showTypeLabels" data-change="update-legend-content">
+                        <label for="showTypeLabels">Çizim tiplerini göster</label>
+                    </div>
+                    <div class="legend-setting-item">
+                        <input type="checkbox" id="showOnlyVisible" checked data-change="update-legend-content">
+                        <label for="showOnlyVisible">Sadece görünür katmanları göster</label>
+                    </div>
+                    <div class="legend-setting-item">
+                        <input type="checkbox" id="showSelectedOnly" data-change="update-legend-content">
+                        <label for="showSelectedOnly">Sadece seçili katmanı göster</label>
+                    </div>
+                    <div class="legend-setting-item">
+                        <label for="legendSymbolSize">Sembol boyutu:</label>
+                        <input type="range" id="legendSymbolSize" min="0.5" max="2" step="0.1" value="1" data-change="update-legend-content">
+                        <span class="value-display" id="legendSymbolSizeDisplay">1x</span>
+                    </div>
+                </div>
+                <div class="legend-content" id="legendContent">
+                    <div id="legendItems">
+                        <!-- Lejant öğeleri buraya dinamik olarak eklenecek -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ölçüm Ayarları Modalı -->
+            <div class="modal" id="measurementSettingsModal">
+                <div class="modal-content" style="width: 500px;">
+                    <div class="modal-header">
+                        <h3>
+                            <span style="font-size: 18px; margin-right: 8px;">📏</span>
+                            Ölçüm Ayarları
+                        </h3>
+                        <button class="close-btn" data-action="close-measurement-settings">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Etiket Pozisyonu Ayarları -->
+                        <div class="style-section">
+                            <h4>📍 Etiket Pozisyonu</h4>
+                            <div class="control-row">
+                                <label>Mesafe Etiketleri:</label>
+                                <select id="distanceLabelPosition" data-change="update-measurement-settings">
+                                    <option value="center">Çizginin Ortası</option>
+                                    <option value="above">Çizginin Üstü</option>
+                                    <option value="below">Çizginin Altı</option>
+                                    <option value="segments">Her Segment Üzerinde</option>
+                                </select>
+                            </div>
+                            <div class="control-row">
+                                <label>Alan Etiketleri:</label>
+                                <select id="areaLabelPosition" data-change="update-measurement-settings">
+                                    <option value="center">Poligonun Ortası</option>
+                                    <option value="centroid">Ağırlık Merkezi</option>
+                                    <option value="bounds">Sınır Ortası</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Etiket Sıklığı Ayarları -->
+                        <div class="style-section">
+                            <h4>📊 Etiket Sıklığı</h4>
+                            <div class="control-row">
+                                <label>Segment Etiket Sıklığı:</label>
+                                <input type="range" id="segmentLabelFrequency" min="1" max="10" value="3" data-change="update-measurement-settings">
+                                <span class="value-display" id="segmentFrequencyValue">3</span>
+                            </div>
+                            <div class="control-row">
+                                <label>Minimum Segment Uzunluğu (m):</label>
+                                <input type="range" id="minSegmentLength" min="10" max="1000" value="100" data-change="update-measurement-settings">
+                                <span class="value-display" id="minSegmentValue">100</span>
+                            </div>
+                        </div>
+
+                        <!-- Görünüm Ayarları -->
+                        <div class="style-section">
+                            <h4>🎨 Görünüm</h4>
+                            <div class="control-row">
+                                <label>Etiket Boyutu:</label>
+                                <input type="range" id="labelSize" min="8" max="18" value="12" data-change="update-measurement-settings">
+                                <span class="value-display" id="labelSizeValue">12px</span>
+                            </div>
+                            <div class="control-row">
+                                <label>Etiket Arka Plan:</label>
+                                <input type="checkbox" id="labelBackground" checked data-change="update-measurement-settings">
+                                <span style="margin-left: 10px;">Arka plan göster</span>
+                            </div>
+                            <div class="control-row">
+                                <label>Etiket Rengi:</label>
+                                <input type="color" id="labelColor" value="#ffffff" data-change="update-measurement-settings">
+                            </div>
+                            <div class="control-row">
+                                <label>Arka Plan Rengi:</label>
+                                <input type="color" id="labelBackgroundColor" value="#000000" data-change="update-measurement-settings">
+                            </div>
+                        </div>
+
+                        <!-- Birim Ayarları -->
+                        <div class="style-section">
+                            <h4>📐 Birimler</h4>
+                            <div class="control-row">
+                                <label>Mesafe Birimi:</label>
+                                <select id="distanceUnit" data-change="update-measurement-settings">
+                                    <option value="auto">Otomatik (m/km)</option>
+                                    <option value="m">Metre (m)</option>
+                                    <option value="km">Kilometre (km)</option>
+                                    <option value="ft">Feet (ft)</option>
+                                    <option value="mi">Mil (mi)</option>
+                                </select>
+                            </div>
+                            <div class="control-row">
+                                <label>Alan Birimi:</label>
+                                <select id="areaUnit" data-change="update-measurement-settings">
+                                    <option value="auto">Otomatik (m²/ha)</option>
+                                    <option value="m2">Metrekare (m²)</option>
+                                    <option value="ha">Hektar (ha)</option>
+                                    <option value="km2">Kilometrekare (km²)</option>
+                                    <option value="ac">Acre (ac)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Özel Ayarlar -->
+                        <div class="style-section">
+                            <h4>⚡ Özel Ayarlar</h4>
+                            <div class="control-row">
+                                <label>Anlık Güncelleme:</label>
+                                <input type="checkbox" id="liveUpdate" checked data-change="update-measurement-settings">
+                                <span style="margin-left: 10px;">Çizim sırasında etiketleri güncelle</span>
+                            </div>
+                            <div class="control-row">
+                                <label>Toplam Mesafe:</label>
+                                <input type="checkbox" id="showTotal" checked data-change="update-measurement-settings">
+                                <span style="margin-left: 10px;">Toplam mesafeyi göster</span>
+                            </div>
+                            <div class="control-row">
+                                <label>Kısmi Mesafeler:</label>
+                                <input type="checkbox" id="showPartial" data-change="update-measurement-settings">
+                                <span style="margin-left: 10px;">Her segment mesafesini göster</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-action="reset-measurement-settings">Varsayılan</button>
+                        <button class="btn btn-primary" data-action="close-measurement-settings">Tamam</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mesaj Konsolu -->
+            <div class="message-console" id="messageConsole">
+                <div class="console-header">
+                    <div class="console-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px;">
+                            <path d="M19,3H5C3.9,3 3,3.9 3,5V9H5V5H19V19H5V15H3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.9 20.1,3 19,3Z"/>
+                            <path d="M10.08,15.58L11.5,17L16.5,12L11.5,7L10.08,8.41L12.67,11H3V13H12.67L10.08,15.58Z"/>
+                        </svg>
+                        Mesaj Konsolu
+                        <span class="message-counter" id="messageCounter">0</span>
+                    </div>
+                                         <div class="console-controls">
+                         <button class="console-btn" title="Alt bara kilitle/Serbest bırak" id="dockBtn" data-action="toggle-console-dock">
+                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                 <path d="M16,20H20V16H16M16,14H20V10H16M4,8V4H8V8M10,20H14V16H10M16,8V4H20V8M4,20H8V16H4M4,14H8V10H4M10,8V4H14V8M10,14H14V10H10V14Z"/>
+                             </svg>
+                         </button>
+                         <button class="console-btn" title="Temizle" data-action="clear-message-console">
+                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                 <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                             </svg>
+                         </button>
+                         <button class="console-btn" title="Daralt/Genişlet" id="consoleMinimizeBtn" data-action="toggle-console-minimize">−</button>
+                         <button class="console-btn" title="Kapat" data-action="toggle-message-console">×</button>
+                     </div>
+                </div>
+                <div class="console-filters">
+                    <label class="filter-label">
+                        <input type="checkbox" id="showInfoMessages" checked data-change="filter-messages">
+                        <span class="filter-badge info">Info</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" id="showSuccessMessages" checked data-change="filter-messages">
+                        <span class="filter-badge success">Success</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" id="showWarningMessages" checked data-change="filter-messages">
+                        <span class="filter-badge warning">Warning</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" id="showErrorMessages" checked data-change="filter-messages">
+                        <span class="filter-badge error">Error</span>
+                    </label>
+                </div>
+                <div class="console-content" id="consoleContent">
+                    <div class="console-messages" id="consoleMessages">
+                        <!-- Mesajlar buraya dinamik olarak eklenecek -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Birleşik Araç Kontrolleri -->
+            <div class="map-tools-container">
+                <!-- Ölçüm Araçları -->
+                <div class="tool-group">
+                    <div class="tool-group-title">Ölçüm</div>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" title="Mesafe Ölç" id="distanceBtn" data-action="start-measurement:distance">
+                            <span style="font-size: 16px; color: #2ecc71;">📏</span>
+                        </button>
+                        <button class="tool-btn" title="Alan Ölç" id="areaBtn" data-action="start-measurement:area">
+                            <span style="font-size: 16px; color: #3498db;">⬟</span>
+                        </button>
+                        <button class="tool-btn" title="Ölçümleri Temizle" data-action="clear-measurements">
+                            <span style="font-size: 16px; color: #e74c3c;">🗑️</span>
+                        </button>
+                        <button class="tool-btn" title="Ölçüm Ayarları" data-action="open-measurement-settings">
+                            <span style="font-size: 16px; color: #9b59b6;">⚙️</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Çizim Araçları -->
+                <div class="tool-group">
+                    <div class="tool-group-title">Çizim</div>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" title="Nokta Çiz" id="pointBtn" data-action="start-drawing:marker">
+                            <span style="font-size: 16px; color: #e74c3c;">📍</span>
+                        </button>
+                        <button class="tool-btn" title="Çizgi Çiz" id="lineBtn" data-action="start-drawing:polyline">
+                            <span style="font-size: 16px; color: #f39c12;">📏</span>
+                        </button>
+                        <button class="tool-btn" title="Poligon Çiz" id="polygonBtn" data-action="start-drawing:polygon">
+                            <span style="font-size: 16px; color: #3498db;">⬟</span>
+                        </button>
+                        <button class="tool-btn" title="Dikdörtgen Çiz" id="rectangleBtn" data-action="start-drawing:rectangle">
+                            <span style="font-size: 16px; color: #9b59b6;">⬜</span>
+                        </button>
+                        <button class="tool-btn" title="Daire Çiz" id="circleBtn" data-action="start-drawing:circle">
+                            <span style="font-size: 16px; color: #e67e22;">⭕</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Düzenleme Araçları -->
+                <div class="tool-group">
+                    <div class="tool-group-title">Düzenleme</div>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" title="Düzenle" id="editBtn" data-action="toggle-edit-mode">
+                            <span style="font-size: 16px; color: #9b59b6;">✏️</span>
+                        </button>
+                        <button class="tool-btn" title="Sil" id="deleteBtn" data-action="toggle-delete-mode">
+                            <span style="font-size: 16px; color: #e74c3c;">🗑️</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Görünüm Araçları -->
+                <div class="tool-group">
+                    <div class="tool-group-title">Görünüm</div>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" title="Lejant Aç/Kapat" id="legendBtn" data-action="toggle-legend">
+                            <span style="font-size: 16px; color: #7f8c8d;">📋</span>
+                        </button>
+                        <button class="tool-btn" title="Tümüne Zoom" id="zoomExtentBtn" data-action="zoom-to-extent">
+                            <span style="font-size: 16px; color: #2ecc71;">🔍</span>
+                        </button>
+                        <button class="tool-btn" title="Tam Ekran" id="fullscreenBtn" data-action="toggle-fullscreen">
+                            <span style="font-size: 16px; color: #34495e;">⛶</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Grup/Katman Oluşturma Modal -->
+    <div class="modal" id="createModal">
+        <div class="modal-content" style="width: 400px;">
+            <div class="modal-header">
+                <h3 id="createModalTitle">Yeni Oluştur</h3>
+                <button class="close-btn" data-action="close-create-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-section">
+                    <h4 id="createModalSubtitle">Ad</h4>
+                    <div class="control-row">
+                        <input type="text" id="createNameInput" placeholder="Ad giriniz..." style="width: 100%; padding: 10px; border: 2px solid #2196f3; border-radius: 4px; font-size: 14px;">
+                    </div>
+                    <div class="control-row" id="groupSelectRow" style="display: none; margin-top: 10px;">
+                        <label>Hedef Grup:</label>
+                        <select id="targetGroupSelect" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="close-create-modal">İptal</button>
+                <button class="btn btn-primary" id="createModalConfirm" data-action="confirm-create">Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stil Ayarları Modal -->
+    <div class="modal" id="styleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Stil Ayarları</h3>
+                <button class="close-btn" data-action="close-style-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Ayar Modu Seçici -->
+                <div class="style-section" style="border-bottom: 2px solid #dee2e6; margin-bottom: 15px; padding-bottom: 10px;">
+                    <div class="control-row">
+                        <label style="font-weight: 600; color: #495057;">Ayar Modu:</label>
+                        <div style="display: flex; gap: 10px; flex: 1; align-items: center;">
+                            <select id="styleMode" style="flex: 1; padding: 5px; border: 1px solid #ced4da; border-radius: 4px;">
+                                <option value="default">Varsayılan Değerler</option>
+                                <option value="custom">Kullanıcı Özel Ayarları</option>
+                            </select>
+                            <button id="styleModeToggle" 
+                                    class="style-mode-toggle" 
+ 
+                                    title="Stil Modunu Değiştir">
+                                <span id="styleModeIcon">🏢</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="style-tabs">
+                    <button class="style-tab active" data-action="switch-tab:style">Stil</button>
+                    <button class="style-tab" data-action="switch-tab:label">Etiket</button>
+                    <button class="style-tab" data-action="switch-tab:theme">Tema</button>
+                </div>
+
+                <div id="styleContent">
+                    <!-- Nokta Stili -->
+                    <div class="style-section" id="pointStyle">
+                        <h4>Nokta Görünümü</h4>
+                        <div class="control-row">
+                            <label>Stil Tipi:</label>
+                            <select id="pointStyleType">
+                                <option value="custom">Özel Tasarım</option>
+                                <option value="icon">Hazır İkon</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Özel Tasarım Seçenekleri -->
+                        <div id="customPointOptions">
+                            <div class="control-row">
+                                <label>Renk:</label>
+                                <input type="color" id="pointColor" value="#ff0000">
+                            </div>
+                            <div class="control-row">
+                                <label>Boyut:</label>
+                                <input type="range" id="pointSize" min="4" max="20" value="8">
+                                <span class="value-display">8px</span>
+                            </div>
+                            <div class="control-row">
+                                <label>Şekil:</label>
+                                <select id="pointShape">
+                                    <option value="circle">Daire</option>
+                                    <option value="square">Kare</option>
+                                    <option value="triangle">Üçgen</option>
+                                    <option value="star">Yıldız</option>
+                                    <option value="diamond">Elmas</option>
+                                </select>
+                            </div>
+                            <div class="control-row">
+                                <label>Saydamlık:</label>
+                                <input type="range" id="pointOpacity" min="0" max="100" value="100">
+                                <span class="value-display">100%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Hazır İkon Seçenekleri -->
+                        <div id="iconPointOptions" style="display: none;">
+                            <div class="control-row">
+                                <label>İkon Kategorisi:</label>
+                                <select id="iconCategory">
+                                    <option value="location">Konum</option>
+                                    <option value="transport">Ulaşım</option>
+                                    <option value="service">Hizmet</option>
+                                    <option value="nature">Doğa</option>
+                                    <option value="building">Yapı</option>
+                                </select>
+                            </div>
+                            <div class="control-row">
+                                <label>İkon Seçimi:</label>
+                                <div class="icon-grid" id="iconGrid">
+                                    <!-- İkonlar dinamik olarak buraya eklenecek -->
+                                </div>
+                            </div>
+                            <div class="control-row">
+                                <label>İkon Boyutu:</label>
+                                <input type="range" id="iconSize" min="16" max="48" value="24">
+                                <span class="value-display">24px</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Çizgi Stili -->
+                    <div class="style-section" id="lineStyle">
+                        <h4>Çizgi Görünümü</h4>
+                        <div class="control-row">
+                            <label>Renk:</label>
+                            <input type="color" id="lineColor" value="#ff7800">
+                        </div>
+                        <div class="control-row">
+                            <label>Kalınlık:</label>
+                            <input type="range" id="lineWidth" min="1" max="10" value="3">
+                            <span class="value-display">3px</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Saydamlık:</label>
+                            <input type="range" id="lineOpacity" min="0" max="100" value="100">
+                            <span class="value-display">100%</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Çizgi Tipi:</label>
+                            <select id="lineType">
+                                <option value="solid">Düz</option>
+                                <option value="dashed">Kesikli</option>
+                                <option value="dotted">Noktalı</option>
+                                <option value="dashDot">Kesik-Nokta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Poligon Stili -->
+                    <div class="style-section" id="polygonStyle">
+                        <h4>Poligon Görünümü</h4>
+                        <div class="control-row">
+                            <label>Dolgu Rengi:</label>
+                            <input type="color" id="fillColor" value="#3388ff">
+                        </div>
+                        <div class="control-row">
+                            <label>Dolgu Saydamlık:</label>
+                            <input type="range" id="fillOpacity" min="0" max="100" value="50">
+                            <span class="value-display">50%</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Kenar Rengi:</label>
+                            <input type="color" id="strokeColor" value="#000000">
+                        </div>
+                        <div class="control-row">
+                            <label>Kenar Kalınlığı:</label>
+                            <input type="range" id="strokeWidth" min="0" max="5" value="1">
+                            <span class="value-display">1px</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Kenar Saydamlık:</label>
+                            <input type="range" id="strokeOpacity" min="0" max="100" value="100">
+                            <span class="value-display">100%</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Kenar Tipi:</label>
+                            <select id="strokeType">
+                                <option value="solid">Düz</option>
+                                <option value="dashed">Kesikli</option>
+                                <option value="dotted">Noktalı</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+
+                <div id="labelContent" style="display: none;">
+                    <div class="style-section">
+                        <h4>Etiket Ayarları</h4>
+                        <div class="control-row">
+                            <label>Etiket Göster:</label>
+                            <input type="checkbox" id="showLabels" style="margin-left: 10px;">
+                        </div>
+                        <div class="control-row">
+                            <label>Etiket Alanı:</label>
+                            <select id="labelField">
+                                <option value="">Seçiniz</option>
+                                <option value="name">İsim</option>
+                                <option value="id">ID</option>
+                                <option value="type">Tip</option>
+                                <option value="area">Alan (m²)</option>
+                                <option value="length">Uzunluk (m)</option>
+                            </select>
+                        </div>
+                        <div class="control-row">
+                            <label>Font Boyutu:</label>
+                            <input type="range" id="fontSize" min="8" max="24" value="12">
+                            <span class="value-display">12px</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Font Rengi:</label>
+                            <input type="color" id="fontColor" value="#000000">
+                        </div>
+                        <div class="control-row">
+                            <label>Halo Rengi:</label>
+                            <input type="color" id="haloColor" value="#ffffff">
+                        </div>
+                        <div class="control-row">
+                            <label>Halo Kalınlığı:</label>
+                            <input type="range" id="haloWidth" min="0" max="5" value="1">
+                            <span class="value-display">1px</span>
+                        </div>
+                        <div class="control-row">
+                            <label>Etiket Konumu:</label>
+                            <select id="labelPosition">
+                                <option value="center">Merkez</option>
+                                <option value="top">Üst</option>
+                                <option value="bottom">Alt</option>
+                                <option value="left">Sol</option>
+                                <option value="right">Sağ</option>
+                            </select>
+                        </div>
+                        <div class="control-row">
+                            <button class="btn btn-secondary" style="margin-top: 10px;" data-action="assign-field-values">
+                                📊 Seçili Alana Değer Ata
+                            </button>
+                            <small style="color: #6c757d; display: block; margin-top: 5px;">
+                                Yukarıdaki "Etiket Alanı"na göre otomatik değer atar
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="themeContent" style="display: none;">
+                    <div class="style-section">
+                        <h4>🎨 Symbology (Semboloji)</h4>
+
+                        <!-- Symbology Mode Selector -->
+                        <div class="control-row">
+                            <label style="font-weight: 600;">Sembol Tipi:</label>
+                            <select id="symbologyMode" style="width: 100%;" data-change="on-symbology-mode-change">
+                                <option value="single">Tek Sembol (Single Symbol)</option>
+                                <option value="categorized">Kategorik (Categorized)</option>
+                                <option value="graduated">Değer Aralıkları (Graduated)</option>
+                                <option value="heatmap">🔥 Isı Haritası (Heatmap)</option>
+                            </select>
+                        </div>
+
+                        <!-- Single Symbol Options -->
+                        <div id="singleSymbolOptions" class="symbology-options">
+                            <p style="color: #666; font-size: 12px; margin: 10px 0;">Tüm özellikler aynı stilde gösterilir. Stil sekmesinden görünüm ayarlarını yapabilirsiniz.</p>
+                        </div>
+
+                        <!-- Categorized Options -->
+                        <div id="categorizedOptions" class="symbology-options" style="display: none;">
+                            <div class="control-row">
+                                <label>Kategori Alanı:</label>
+                                <select id="categoryField" data-change="update-category-preview">
+                                    <option value="">Seçiniz</option>
+                                    <option value="category">Kategori</option>
+                                    <option value="type">Tip</option>
+                                    <option value="name">İsim</option>
+                                </select>
+                            </div>
+
+                            <div class="control-row">
+                                <label>Renk Paleti:</label>
+                                <select id="categoricalColorRamp" data-change="update-category-preview">
+                                    <option value="Set1">Set1 (9 renk)</option>
+                                    <option value="Set2">Set2 (8 renk)</option>
+                                    <option value="Set3">Set3 (12 renk)</option>
+                                    <option value="Pastel1">Pastel1 (9 renk)</option>
+                                    <option value="Pastel2">Pastel2 (8 renk)</option>
+                                    <option value="Dark2">Dark2 (8 renk)</option>
+                                    <option value="Accent">Accent (8 renk)</option>
+                                    <option value="Paired">Paired (12 renk)</option>
+                                </select>
+                            </div>
+
+                            <div id="categoryPreview" class="color-ramp-preview">
+                                <!-- Color preview will be inserted here -->
+                            </div>
+
+                            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" data-action="apply-categorized-style">
+                                ✨ Kategorik Stili Uygula
+                            </button>
+                        </div>
+
+                        <!-- Graduated Options -->
+                        <div id="graduatedOptions" class="symbology-options" style="display: none;">
+                            <div class="control-row">
+                                <label>Değer Alanı:</label>
+                                <select id="valueField" data-change="update-graduated-preview">
+                                    <option value="">Seçiniz</option>
+                                    <option value="value">Değer</option>
+                                    <option value="population">Nüfus</option>
+                                    <option value="area">Alan</option>
+                                    <option value="density">Yoğunluk</option>
+                                    <option value="temperature">Sıcaklık</option>
+                                </select>
+                            </div>
+
+                            <div class="control-row">
+                                <label>Sınıflandırma:</label>
+                                <select id="classificationMethod" data-change="update-graduated-preview">
+                                    <option value="quantile">Quantile (Eşit Sayıda)</option>
+                                    <option value="equal">Equal Interval (Eşit Aralık)</option>
+                                    <option value="natural">Natural Breaks (Jenks)</option>
+                                    <option value="manual">Manuel</option>
+                                </select>
+                            </div>
+
+                            <div class="control-row">
+                                <label>Sınıf Sayısı:</label>
+                                <input type="range" id="numClasses" min="3" max="9" value="5" data-input="update-graduated-preview">
+                                <span class="value-display">5</span>
+                            </div>
+
+                            <div class="control-row">
+                                <label>Renk Tipi:</label>
+                                <select id="colorRampType" data-change="update-color-ramp-list">
+                                    <option value="sequential">Sequential (Ardışık)</option>
+                                    <option value="diverging">Diverging (Ayrılan)</option>
+                                    <option value="heatmap">Heatmap (Isı Haritası)</option>
+                                </select>
+                            </div>
+
+                            <div class="control-row">
+                                <label>Renk Paleti:</label>
+                                <select id="colorRampName" data-change="update-graduated-preview">
+                                    <!-- Options will be populated by updateColorRampList() -->
+                                </select>
+                            </div>
+
+                            <div id="graduatedPreview" class="color-ramp-preview">
+                                <!-- Color ramp preview will be inserted here -->
+                            </div>
+
+                            <div class="control-row" style="margin-top: 10px;">
+                                <label>
+                                    <input type="checkbox" id="invertColorRamp" data-change="update-graduated-preview">
+                                    Renkleri Ters Çevir
+                                </label>
+                            </div>
+
+                            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" data-action="apply-graduated-style">
+                                📊 Graduated Stili Uygula
+                            </button>
+                        </div>
+
+                        <!-- Heatmap Options -->
+                        <div id="heatmapOptions" class="symbology-options" style="display: none;">
+                            <p style="color: #666; font-size: 13px; margin: 10px 0;">
+                                Isı haritası sadece <strong>nokta (point)</strong> özellikleri için çalışır ve <strong>value</strong> alanını kullanır.
+                            </p>
+
+                            <div class="control-row">
+                                <label>Yarıçap:</label>
+                                <input type="range" id="heatmapRadius" min="10" max="100" value="50">
+                                <span class="value-display">50px</span>
+                            </div>
+
+                            <div class="control-row">
+                                <label>Bulanıklık:</label>
+                                <input type="range" id="heatmapBlur" min="5" max="50" value="35">
+                                <span class="value-display">35px</span>
+                            </div>
+
+                            <div class="control-row" style="margin-top: 15px;">
+                                <button class="btn btn-primary" style="width: 100%;" data-action="apply-heatmap-visualization">
+                                    🔥 Isı Haritası Göster
+                                </button>
+                            </div>
+
+                            <div class="control-row" style="margin-top: 10px;">
+                                <button class="btn btn-secondary" style="width: 100%;" data-action="remove-heatmap-visualization">
+                                    ❌ Isı Haritasını Kaldır
+                                </button>
+                            </div>
+
+                            <div style="background: #e3f2fd; padding: 10px; border-radius: 4px; margin-top: 15px; font-size: 12px;">
+                                <strong>💡 Kullanım:</strong>
+                                <ol style="margin: 5px 0 0 15px; padding: 0;">
+                                    <li>Nokta çizin</li>
+                                    <li>Sağ tıklayıp "Özellikleri Düzenle"</li>
+                                    <li>"Değer" alanına sayı girin</li>
+                                    <li>"Isı Haritası Göster" butonuna tıklayın</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- Legend Preview -->
+                        <div id="legendPreview" class="legend-preview" style="margin-top: 15px; display: none;">
+                            <h5 style="margin: 0 0 10px 0; font-size: 13px;">Lejant Önizlemesi:</h5>
+                            <div id="legendContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="close-style-modal">İptal</button>
+                <button class="btn btn-primary" data-action="save-and-close-style">Kaydet & Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sorgu Modal -->
+    <div class="modal" id="queryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sorgu</h3>
+                <button class="close-btn" data-action="close-query-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="style-tabs">
+                    <button class="style-tab active" data-action="switch-query-tab:basic">Temel</button>
+                    <button class="style-tab" data-action="switch-query-tab:advanced">Gelişmiş</button>
+                </div>
+                
+                <div id="basicQueryContent">
+                    <div class="style-section">
+                        <h4>Temel Sorgu</h4>
+                        <div class="control-row">
+                            <label>Alan:</label>
+                            <select id="queryField">
+                                <option value="">Seçiniz</option>
+                                <option value="name">Ad</option>
+                                <option value="type">Tip</option>
+                                <option value="area">Alan</option>
+                                <option value="population">Nüfus</option>
+                            </select>
+                        </div>
+                        <div class="control-row">
+                            <label>Operatör:</label>
+                            <select id="queryOperator">
+                                <option value="equals">Eşittir</option>
+                                <option value="notEquals">Eşit Değildir</option>
+                                <option value="contains">İçerir</option>
+                                <option value="startsWith">İle Başlar</option>
+                                <option value="endsWith">İle Biter</option>
+                                <option value="greaterThan">Büyüktür</option>
+                                <option value="lessThan">Küçüktür</option>
+                            </select>
+                        </div>
+                        <div class="control-row">
+                            <label>Değer:</label>
+                            <input type="text" id="queryValue" placeholder="Değer giriniz">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="advancedQueryContent" style="display: none;">
+                    <div class="style-section">
+                        <h4>Gelişmiş Sorgu</h4>
+                        <div class="control-row">
+                            <label>SQL İfadesi:</label>
+                        </div>
+                        <div class="control-row">
+                            <textarea id="sqlQuery" rows="5" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-family: monospace;" placeholder="Örnek: alan > 1000 AND tip = 'Konut'"></textarea>
+                        </div>
+                        <div class="control-row">
+                            <small style="color: #6c757d;">Desteklenen operatörler: AND, OR, =, !=, &gt;, &lt;, &gt;=, &lt;=, LIKE</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="close-query-modal">İptal</button>
+                <button class="btn btn-primary" data-action="apply-query">Sorgula</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Katman Detayları Modal -->
+    <div class="layer-details-modal" id="layerDetailsModal">
+        <div class="layer-details-content">
+            <div class="layer-details-header">
+                <h3>Katman Detayları: <span id="layerDetailName"></span></h3>
+                <button class="close-btn" data-action="close-layer-details-modal">&times;</button>
+            </div>
+            <div class="layer-details-body">
+                <div id="featuresContainer">
+                    <!-- Çizim detayları burada listelenecek -->
+                </div>
+            </div>
+            <div class="layer-details-footer">
+                <button class="btn btn-secondary" data-action="close-layer-details-modal">Kapat</button>
+                <button class="btn btn-primary" data-action="add-feature-to-layer">Yeni Çizim Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attribute Editor Modal -->
+    <div class="modal" id="attributeEditorModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📝 Özellik Düzenleyici</h3>
+                <button class="close-btn" data-action="close-attribute-editor">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="control-row">
+                    <label style="font-weight: 600;">İsim:</label>
+                    <input type="text" id="attrName" placeholder="Örn: Merkez Nokta" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                </div>
+                <div class="control-row" style="margin-top: 15px;">
+                    <label style="font-weight: 600;">Açıklama:</label>
+                    <textarea id="attrDescription" placeholder="Örn: Bu nokta şehir merkezini göstermektedir" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; min-height: 60px;"></textarea>
+                </div>
+                <div class="control-row" style="margin-top: 15px;">
+                    <label style="font-weight: 600;">Değer (Numeric):</label>
+                    <input type="number" id="attrValue" placeholder="Örn: 125000" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                    <small style="color: #6c757d; display: block; margin-top: 5px;">Bu değer ısı haritası ve graduated stilinde kullanılır</small>
+                </div>
+                <div class="control-row" style="margin-top: 15px;">
+                    <label style="font-weight: 600;">Kategori:</label>
+                    <input type="text" id="attrCategory" placeholder="Örn: Park, Hastane, Okul" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                    <small style="color: #6c757d; display: block; margin-top: 5px;">Bu kategori kategorik stilinde kullanılır</small>
+                </div>
+                <div class="control-row" style="margin-top: 15px;">
+                    <label style="font-weight: 600;">Özel Alanlar (JSON):</label>
+                    <textarea id="attrCustom" placeholder='{"alan1": "değer1", "alan2": 123}' style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; min-height: 60px; font-family: monospace;"></textarea>
+                    <small style="color: #6c757d; display: block; margin-top: 5px;">İstediğiniz ek alanları JSON formatında ekleyebilirsiniz</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="close-attribute-editor">İptal</button>
+                <button class="btn btn-primary" data-action="save-feature-attributes">💾 Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu (Sağ Tık Menüsü) -->
+    <div id="contextMenu" style="display: none; position: absolute; z-index: 10000; background: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); min-width: 150px;">
+        <div class="context-menu-item" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;" data-action="edit-feature-attributes">
+            📝 Özellikleri Düzenle
+        </div>
+        <div class="context-menu-item" style="padding: 10px; cursor: pointer; color: #dc3545;" data-action="delete-feature-from-context">
+            🗑️ Sil
+        </div>
+    </div>
+
+
+  <!-- External dependencies -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4/2.9.2/proj4.js"></script>
+  <script src="https://unpkg.com/proj4leaflet@1.0.2/src/proj4leaflet.js"></script>
+
+  <!-- Our modular JavaScript -->
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
