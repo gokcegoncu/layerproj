@@ -1366,35 +1366,91 @@ async function loadDataFromDatabase() {
 
                 for (const featureData of features) {
                     try {
+                        console.log(`📥 Loading feature ${featureData.id}:`, {
+                            type: featureData.type,
+                            geometryType: featureData.geometry?.type,
+                            hasProperties: !!featureData.properties
+                        });
+
                         // Create Leaflet layer from GeoJSON geometry
-                        const geoJsonLayer = L.geoJSON(featureData.geometry);
-                        const leafletLayer = geoJsonLayer.getLayers()[0];
+                        let leafletLayer = null;
+                        const geom = featureData.geometry;
 
-                        if (leafletLayer && window.drawnItems) {
-                            // Add to map
-                            if (layerData.visible) {
-                                window.drawnItems.addLayer(leafletLayer);
-                            }
-
-                            // Add to layer features
-                            window.layerFeatures[layerData.id].push({
-                                id: featureData.id,
-                                type: featureData.type,
-                                layer: leafletLayer
-                            });
-
-                            // Add to drawn layers
-                            window.drawnLayers.push({
-                                id: featureData.id,
-                                layerId: layerData.id,
-                                layer: leafletLayer,
-                                type: featureData.type,
-                                groupId: groupData.id,
-                                properties: featureData.properties || {}
-                            });
+                        // Create layer based on geometry type
+                        if (geom.type === 'Point') {
+                            leafletLayer = L.marker([geom.coordinates[1], geom.coordinates[0]]);
+                        } else if (geom.type === 'LineString') {
+                            const coords = geom.coordinates.map(c => [c[1], c[0]]);
+                            leafletLayer = L.polyline(coords);
+                        } else if (geom.type === 'Polygon') {
+                            const coords = geom.coordinates[0].map(c => [c[1], c[0]]);
+                            leafletLayer = L.polygon(coords);
+                        } else {
+                            // Fallback to L.geoJSON for complex geometries
+                            const geoJsonLayer = L.geoJSON(geom);
+                            leafletLayer = geoJsonLayer.getLayers()[0];
                         }
+
+                        if (!leafletLayer) {
+                            console.error(`❌ Failed to create layer for feature ${featureData.id}`);
+                            continue;
+                        }
+
+                        // Validate layer has coordinate methods
+                        const hasCoordMethods = !!(
+                            leafletLayer.getLatLng ||
+                            leafletLayer.getBounds ||
+                            leafletLayer.getLatLngs ||
+                            leafletLayer.getCenter
+                        );
+
+                        if (!hasCoordMethods) {
+                            console.error(`❌ Layer missing coordinate methods for ${featureData.id}`, leafletLayer);
+                            continue;
+                        }
+
+                        console.log(`✅ Layer created:`, {
+                            hasGetLatLng: !!leafletLayer.getLatLng,
+                            hasGetBounds: !!leafletLayer.getBounds,
+                            hasGetLatLngs: !!leafletLayer.getLatLngs,
+                            layerType: leafletLayer.constructor.name
+                        });
+
+                        // ALWAYS add to drawnItems (source of truth for map display)
+                        window.drawnItems.addLayer(leafletLayer);
+
+                        // Handle visibility separately
+                        if (!layerData.visible) {
+                            console.log(`  🙈 Layer hidden (will remove from display)`);
+                            window.drawnItems.removeLayer(leafletLayer);
+                        }
+
+                        // Store feature properties on layer for easy access
+                        leafletLayer._featureId = featureData.id;
+                        leafletLayer._featureProperties = featureData.properties || {};
+                        leafletLayer._featureType = featureData.type;
+
+                        // Add to layer features
+                        window.layerFeatures[layerData.id].push({
+                            id: featureData.id,
+                            type: featureData.type,
+                            layer: leafletLayer
+                        });
+
+                        // Add to drawn layers
+                        window.drawnLayers.push({
+                            id: featureData.id,
+                            layerId: layerData.id,
+                            layer: leafletLayer,
+                            type: featureData.type,
+                            groupId: groupData.id,
+                            properties: featureData.properties || {}
+                        });
+
+                        console.log(`✅ Feature loaded successfully: ${featureData.id}`);
+
                     } catch (featureError) {
-                        console.error(`Error loading feature ${featureData.id}:`, featureError);
+                        console.error(`❌ Error loading feature ${featureData.id}:`, featureError);
                     }
                 }
 

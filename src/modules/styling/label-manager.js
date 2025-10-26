@@ -40,6 +40,21 @@ export function applyLabels(layerId) {
 
         const layer = featureInfo.layer;
 
+        // Validate layer object has coordinate methods
+        const hasValidMethods = !!(
+            layer.getLatLng ||
+            layer.getBounds ||
+            layer.getLatLngs ||
+            layer.getCenter
+        );
+
+        if (!hasValidMethods) {
+            console.error(`❌ Layer missing coordinate methods for ${feature.id}`);
+            console.error('  Layer object:', layer);
+            console.error('  Layer constructor:', layer.constructor.name);
+            return;
+        }
+
         console.log(`\n📍 Feature ${index + 1}/${layerFeatures.length}:`, {
             id: feature.id,
             type: feature.type,
@@ -48,13 +63,22 @@ export function applyLabels(layerId) {
             hasGetBounds: !!layer.getBounds,
             hasGetCenter: !!layer.getCenter,
             hasGetLatLngs: !!layer.getLatLngs,
-            properties: featureInfo.properties
+            properties: featureInfo.properties,
+            onMap: window.map.hasLayer(layer)
         });
 
-        // Check if layer is on map
+        // Check if layer is in drawnItems (source of truth)
+        const isInDrawnItems = window.drawnItems && window.drawnItems.hasLayer(layer);
+
+        if (!isInDrawnItems) {
+            console.warn(`  ⚠️ Layer not in drawnItems! Adding it now...`);
+            window.drawnItems.addLayer(layer);
+        }
+
+        // Ensure layer is on map
         if (!window.map.hasLayer(layer)) {
             console.log('  ➕ Adding layer to map');
-            layer.addTo(window.map);
+            window.drawnItems.addLayer(layer);
         }
 
         if (showLabels) {
@@ -93,21 +117,26 @@ export function applyLabels(layerId) {
             console.log(`  📌 Position method: ${positionMethod}`);
             console.log(`  📌 Calculated position:`, labelLatLng);
 
-            // Get label text from properties
+            // Get label text from properties (check both locations)
             let labelText = '';
             let labelSource = 'unknown';
 
-            if (featureInfo.properties && featureInfo.properties[labelField] !== undefined) {
+            // Try layer._featureProperties first (new architecture)
+            const properties = layer._featureProperties || featureInfo.properties || {};
+
+            console.log(`  🔍 Looking for labelField "${labelField}" in properties:`, properties);
+
+            if (properties && properties[labelField] !== undefined) {
                 // Found the property value
-                labelText = String(featureInfo.properties[labelField]);
+                labelText = String(properties[labelField]);
                 labelSource = `properties.${labelField}`;
             } else if (labelField === 'id') {
-                // Use feature ID
-                labelText = featureInfo.id;
+                // Use feature ID (try layer first, then featureInfo)
+                labelText = layer._featureId || featureInfo.id;
                 labelSource = 'feature.id';
             } else if (labelField === 'type') {
                 // Use geometry type
-                labelText = feature.type || 'Unknown';
+                labelText = layer._featureType || feature.type || 'Unknown';
                 labelSource = 'feature.type';
             } else if (labelField === 'area' && layer.getLatLngs) {
                 // Calculate area for polygons (very rough estimate)
