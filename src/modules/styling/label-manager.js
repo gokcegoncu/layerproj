@@ -42,6 +42,33 @@ export function applyLabels(layerId) {
         }
 
         if (showLabels) {
+            // Determine label position based on geometry type
+            let labelLatLng = null;
+
+            if (layer.getLatLng) {
+                // Point/Circle/CircleMarker
+                labelLatLng = layer.getLatLng();
+            } else if (layer.getBounds) {
+                // Polygon/Rectangle
+                labelLatLng = layer.getBounds().getCenter();
+            } else if (layer.getCenter) {
+                // Circle with radius
+                labelLatLng = layer.getCenter();
+            } else if (layer.getLatLngs) {
+                // Polyline - use middle point
+                const latlngs = layer.getLatLngs();
+                if (latlngs && latlngs.length > 0) {
+                    const flatLatLngs = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
+                    const midIndex = Math.floor(flatLatLngs.length / 2);
+                    labelLatLng = flatLatLngs[midIndex];
+                }
+            }
+
+            if (!labelLatLng) {
+                console.warn(`⚠️ Could not determine position for ${feature.id}`);
+                return;
+            }
+
             // Get label text from properties
             let labelText = '';
 
@@ -87,44 +114,38 @@ export function applyLabels(layerId) {
                 white-space: nowrap;
             `;
 
-            // Bind tooltip
-            if (layer.bindTooltip) {
-                // First unbind any existing tooltip
-                if (layer.getTooltip()) {
-                    layer.unbindTooltip();
-                }
-
-                // Bind new tooltip
-                layer.bindTooltip(labelText, {
-                    permanent: true,
-                    direction: 'center',
-                    className: 'feature-label',
-                    opacity: 1
-                });
-
-                // Force tooltip to open immediately
-                if (layer.openTooltip) {
-                    layer.openTooltip();
-                }
-
-                // Apply custom style after rendering
-                setTimeout(() => {
-                    const tooltip = layer.getTooltip();
-                    if (tooltip) {
-                        const tooltipElement = tooltip.getElement();
-                        if (tooltipElement) {
-                            tooltipElement.style.cssText = tooltipStyle;
-                            console.log(`✅ Tooltip styled for ${feature.id}: "${labelText}"`);
-                        } else {
-                            console.warn(`⚠️ Tooltip element not found for ${feature.id}`);
-                        }
-                    } else {
-                        console.warn(`⚠️ No tooltip for ${feature.id}`);
-                    }
-                }, 100); // Increased delay for reliability
-            } else {
-                console.warn(`⚠️ Layer ${feature.id} doesn't support tooltips`);
+            // Remove any existing tooltip first
+            if (layer.getTooltip()) {
+                layer.unbindTooltip();
             }
+
+            // Create and bind tooltip with proper positioning
+            const tooltip = L.tooltip({
+                permanent: true,
+                direction: 'center',
+                className: 'feature-label',
+                opacity: 1,
+                offset: [0, 0]
+            })
+            .setContent(labelText)
+            .setLatLng(labelLatLng);
+
+            // Bind to layer
+            layer.bindTooltip(tooltip);
+
+            // Add to map
+            tooltip.addTo(window.map);
+
+            // Apply custom styles
+            setTimeout(() => {
+                const tooltipElement = tooltip.getElement();
+                if (tooltipElement) {
+                    tooltipElement.style.cssText = tooltipStyle;
+                    console.log(`✅ Label positioned at [${labelLatLng.lat.toFixed(4)}, ${labelLatLng.lng.toFixed(4)}]: "${labelText}"`);
+                } else {
+                    console.warn(`⚠️ Tooltip element not found for ${feature.id}`);
+                }
+            }, 50);
         } else {
             // Remove tooltip
             if (layer.unbindTooltip) {
