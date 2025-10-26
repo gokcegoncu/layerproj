@@ -62,13 +62,21 @@ export function setupScaleDisplay(map) {
 
 /**
  * Setup projection system (Proj4)
+ * Note: This is optional and only runs if proj4 is available
  */
 export function setupProjectionSystem() {
     // Proj4 projection definitions
-    if (typeof proj4 !== 'undefined') {
-        // Common Turkish projections
-        proj4.defs('EPSG:5254', '+proj=tmerc +lat_0=0 +lon_0=27 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
-        proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
+    if (typeof window !== 'undefined' && typeof window.proj4 !== 'undefined') {
+        try {
+            // Common Turkish projections
+            window.proj4.defs('EPSG:5254', '+proj=tmerc +lat_0=0 +lon_0=27 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+            window.proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
+            console.log('✅ Projection system initialized with proj4');
+        } catch (error) {
+            console.warn('⚠️ Failed to initialize proj4 projections:', error);
+        }
+    } else {
+        console.log('ℹ️ proj4 not available - using default Leaflet projections only');
     }
 }
 

@@ -742,25 +742,34 @@ function waitForExternalLibraries() {
 
         const checkLibraries = () => {
             attempts++;
-            console.log(`⏳ Checking libraries (attempt ${attempts}/${maxAttempts})...`, {
+
+            const status = {
                 L: !!window.L,
                 'L.Control': !!(window.L && window.L.Control),
                 'L.Control.Draw': !!(window.L && window.L.Control && window.L.Control.Draw),
                 proj4: !!window.proj4
-            });
+            };
 
-            if (window.L && window.L.Control && window.L.Control.Draw && window.proj4) {
-                console.log('✅ All libraries loaded successfully!');
+            // Only log every 10 attempts to reduce console spam
+            if (attempts === 1 || attempts % 10 === 0) {
+                console.log(`⏳ Checking libraries (attempt ${attempts}/${maxAttempts})...`, status);
+            }
+
+            // Core libraries required: Leaflet and Leaflet.Draw
+            // proj4 is OPTIONAL - we can work without it
+            const coreLibrariesLoaded = window.L && window.L.Control && window.L.Control.Draw;
+
+            if (coreLibrariesLoaded) {
+                if (!window.proj4) {
+                    console.warn('⚠️ proj4 library not loaded - advanced projection features disabled');
+                    console.warn('ℹ️ This is OK - the map will work without it');
+                }
+                console.log('✅ All critical libraries loaded!', status);
                 resolve();
             } else if (attempts >= maxAttempts) {
-                console.error('❌ Libraries failed to load after', attempts, 'attempts');
-                console.error('Missing:', {
-                    L: !window.L,
-                    'L.Control': !(window.L && window.L.Control),
-                    'L.Control.Draw': !(window.L && window.L.Control && window.L.Control.Draw),
-                    proj4: !window.proj4
-                });
-                reject(new Error('External libraries failed to load'));
+                console.error('❌ Critical libraries failed to load after', attempts, 'attempts');
+                console.error('Missing:', status);
+                reject(new Error('Critical libraries (Leaflet/Leaflet.Draw) failed to load'));
             } else {
                 setTimeout(checkLibraries, 50);
             }
