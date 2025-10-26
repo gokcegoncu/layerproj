@@ -16,9 +16,9 @@ export async function initDatabase() {
     try {
         console.log('🗄️ Initializing database...');
 
-        // Initialize SQL.js
+        // Initialize SQL.js - Use CDN for WASM file
         SQL = await initSqlJs({
-            locateFile: file => `https://sql.js.org/dist/${file}`
+            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
         });
 
         // Try to load existing database from localStorage
@@ -40,7 +40,9 @@ export async function initDatabase() {
         return db;
     } catch (error) {
         console.error('❌ Database initialization failed:', error);
-        throw error;
+        console.warn('⚠️ Application will continue without database persistence');
+        // Don't throw - let app continue without database
+        return null;
     }
 }
 
@@ -169,6 +171,7 @@ export function importDatabase(file) {
  * Create a new group
  */
 export function createGroup(id, name, position) {
+    if (!db) return false;
     try {
         db.run(
             'INSERT INTO groups (id, name, position) VALUES (?, ?, ?)',
@@ -187,6 +190,7 @@ export function createGroup(id, name, position) {
  * Get all groups
  */
 export function getAllGroups() {
+    if (!db) return [];
     try {
         const stmt = db.prepare('SELECT * FROM groups ORDER BY position');
         const groups = [];
@@ -211,6 +215,7 @@ export function getAllGroups() {
  * Delete a group
  */
 export function deleteGroup(id) {
+    if (!db) return false;
     try {
         db.run('DELETE FROM groups WHERE id = ?', [id]);
         saveDatabase();
@@ -226,6 +231,7 @@ export function deleteGroup(id) {
  * Update group expanded state
  */
 export function updateGroupExpanded(id, expanded) {
+    if (!db) return false;
     try {
         db.run('UPDATE groups SET expanded = ? WHERE id = ?', [expanded ? 1 : 0, id]);
         saveDatabase();
@@ -242,6 +248,7 @@ export function updateGroupExpanded(id, expanded) {
  * Create a new layer
  */
 export function createLayer(id, name, groupId, position) {
+    if (!db) return false;
     try {
         db.run(
             'INSERT INTO layers (id, name, group_id, position) VALUES (?, ?, ?, ?)',
@@ -260,6 +267,7 @@ export function createLayer(id, name, groupId, position) {
  * Get all layers for a group
  */
 export function getLayersByGroup(groupId) {
+    if (!db) return [];
     try {
         const stmt = db.prepare('SELECT * FROM layers WHERE group_id = ? ORDER BY position');
         stmt.bind([groupId]);
@@ -286,6 +294,7 @@ export function getLayersByGroup(groupId) {
  * Get all layers
  */
 export function getAllLayers() {
+    if (!db) return [];
     try {
         const stmt = db.prepare('SELECT * FROM layers ORDER BY position');
         const layers = [];
@@ -311,6 +320,7 @@ export function getAllLayers() {
  * Delete a layer
  */
 export function deleteLayer(id) {
+    if (!db) return false;
     try {
         db.run('DELETE FROM layers WHERE id = ?', [id]);
         saveDatabase();
@@ -326,6 +336,7 @@ export function deleteLayer(id) {
  * Update layer visibility
  */
 export function updateLayerVisibility(id, visible) {
+    if (!db) return false;
     try {
         db.run('UPDATE layers SET visible = ? WHERE id = ?', [visible ? 1 : 0, id]);
         saveDatabase();
@@ -342,6 +353,7 @@ export function updateLayerVisibility(id, visible) {
  * Create a new feature
  */
 export function createFeature(id, layerId, type, geometry, properties = {}) {
+    if (!db) return false;
     try {
         const geometryJson = JSON.stringify(geometry);
         const propertiesJson = JSON.stringify(properties);
@@ -363,6 +375,7 @@ export function createFeature(id, layerId, type, geometry, properties = {}) {
  * Get all features for a layer
  */
 export function getFeaturesByLayer(layerId) {
+    if (!db) return [];
     try {
         const stmt = db.prepare('SELECT * FROM features WHERE layer_id = ?');
         stmt.bind([layerId]);
@@ -389,6 +402,7 @@ export function getFeaturesByLayer(layerId) {
  * Delete a feature
  */
 export function deleteFeature(id) {
+    if (!db) return false;
     try {
         db.run('DELETE FROM features WHERE id = ?', [id]);
         saveDatabase();
@@ -404,6 +418,7 @@ export function deleteFeature(id) {
  * Delete all features for a layer
  */
 export function deleteFeaturesByLayer(layerId) {
+    if (!db) return false;
     try {
         db.run('DELETE FROM features WHERE layer_id = ?', [layerId]);
         saveDatabase();
@@ -419,6 +434,7 @@ export function deleteFeaturesByLayer(layerId) {
  * Update feature properties
  */
 export function updateFeatureProperties(id, properties) {
+    if (!db) return false;
     try {
         const propertiesJson = JSON.stringify(properties);
         db.run('UPDATE features SET properties = ? WHERE id = ?', [propertiesJson, id]);
@@ -434,6 +450,7 @@ export function updateFeatureProperties(id, properties) {
  * Get database statistics
  */
 export function getDatabaseStats() {
+    if (!db) return { groups: 0, layers: 0, features: 0 };
     try {
         const stats = {};
 
@@ -457,6 +474,7 @@ export function getDatabaseStats() {
  * Clear all data from database
  */
 export function clearDatabase() {
+    if (!db) return false;
     try {
         db.run('DELETE FROM features');
         db.run('DELETE FROM layers');
