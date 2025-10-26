@@ -117,7 +117,7 @@ export function updateLegendSymbolSizeDisplay() {
  * @returns {Object} - Styles object with point, line, and polygon styles
  */
 export function getLayerActualStyles(layerId) {
-    const features = state.layerFeatures[layerId] || [];
+    const features = window.layerFeatures[layerId] || [];
     const styles = {
         point: { color: '#3388ff', size: 8, shape: 'circle', opacity: 1 },
         line: { color: '#ff7800', width: 3, opacity: 1, type: 'solid' },
@@ -223,7 +223,7 @@ export function updateLegendContent() {
             const groupName = groupElement?.querySelector('.group-name')?.textContent || 'Default';
 
             // Check drawing types in layer
-            const features = state.layerFeatures[layerId] || [];
+            const features = window.layerFeatures[layerId] || [];
             const hasPoint = features.some(f => f.type === 'point');
             const hasLine = features.some(f => f.type === 'line');
             const hasPolygon = features.some(f => f.type === 'polygon');

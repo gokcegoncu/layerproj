@@ -30,7 +30,7 @@ export function applyCategorizedStyle() {
     }
 
     // Get only features from active layer
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
 
     if (layerFeatures.length === 0) {
         showNotification('No features found in this layer!', 'warning');
@@ -96,8 +96,8 @@ export function applyCategorizedStyle() {
     });
 
     // Refresh map
-    if (state.map && state.map.invalidateSize) {
-        setTimeout(() => state.map.invalidateSize(), 100);
+    if (window.map && window.map.invalidateSize) {
+        setTimeout(() => window.map.invalidateSize(), 100);
     }
 
     showNotification(`✨ Categorized style applied! (${applied} features, ${categories.size} categories)`, 'success');
@@ -113,7 +113,7 @@ export function applyCategorizedStyle() {
 export function getCategorizedValues(layerId, fieldName) {
     if (!layerId || !fieldName) return [];
 
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
     const values = new Set();
 
     layerFeatures.forEach(layerInfo => {
@@ -151,7 +151,7 @@ export function updateCategoryPreview() {
     }
 
     // Get only features from active layer
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
     const categories = new Set();
 
     layerFeatures.forEach(layerInfo => {
@@ -235,7 +235,7 @@ export function applyCustomCategoryColors(layerId, fieldName, colorMap) {
         return;
     }
 
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
     let applied = 0;
 
     layerFeatures.forEach(layerInfo => {
@@ -283,7 +283,7 @@ export function applyCustomCategoryColors(layerId, fieldName, colorMap) {
 export function getCategoryStatistics(layerId, fieldName) {
     if (!layerId || !fieldName) return null;
 
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
     const counts = {};
     let total = 0;
 

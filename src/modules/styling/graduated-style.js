@@ -34,7 +34,7 @@ export function applyGraduatedStyle() {
     }
 
     // Get only features from active layer
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
 
     if (layerFeatures.length === 0) {
         showNotification('No features found in this layer!', 'warning');
@@ -113,8 +113,8 @@ export function applyGraduatedStyle() {
     });
 
     // Refresh map
-    if (state.map && state.map.invalidateSize) {
-        setTimeout(() => state.map.invalidateSize(), 100);
+    if (window.map && window.map.invalidateSize) {
+        setTimeout(() => window.map.invalidateSize(), 100);
     }
 
     showNotification(`📊 Graduated style applied! (${applied} features, ${numClasses} classes)`, 'success');
@@ -313,7 +313,7 @@ export function updateGraduatedPreview() {
     }
 
     // Get only features from active layer
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
 
     // Collect values
     const values = [];
@@ -396,7 +396,7 @@ function updateLegendPreview(breaks, colors) {
 export function getNumericValues(layerId, fieldName) {
     if (!layerId || !fieldName) return [];
 
-    const layerFeatures = state.drawnLayers.filter(l => l.layerId === layerId);
+    const layerFeatures = window.drawnLayers.filter(l => l.layerId === layerId);
     const values = [];
 
     layerFeatures.forEach(layerInfo => {

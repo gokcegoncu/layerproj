@@ -71,15 +71,54 @@ function initializeApplication() {
 
         // 3. Initialize measurement tools
         console.log('📏 Initializing measurement tools...');
-        // window.measurementTools = new MeasurementTools(window.map);
+        if (Measurement.initMeasurementTools) {
+            window.measurementTools = Measurement.initMeasurementTools(window.map);
+        }
 
         // 4. Initialize message console
         console.log('💬 Initializing message console...');
-        // MessageConsole.init();
+        if (Console.initConsole) {
+            Console.initConsole();
+        }
 
-        // 5. Setup drawing controls
+        // 5. Setup drawing controls (Leaflet.Draw)
         console.log('✏️ Setting up drawing controls...');
-        // initializeDrawingTools(window.map, window.drawnItems);
+        if (window.L && window.L.Control && window.L.Control.Draw) {
+            window.drawControl = new L.Control.Draw({
+                draw: {
+                    polyline: true,
+                    polygon: true,
+                    rectangle: true,
+                    circle: true,
+                    marker: true,
+                    circlemarker: false
+                },
+                edit: {
+                    featureGroup: window.drawnItems,
+                    remove: true
+                }
+            });
+            window.map.addControl(window.drawControl);
+
+            // Setup draw event handlers
+            window.map.on(L.Draw.Event.CREATED, function (event) {
+                const layer = event.layer;
+                window.drawnItems.addLayer(layer);
+
+                // Add to drawnLayers tracking
+                const layerId = window.activeLayerId || 'default-layer';
+                window.drawnLayers.push({
+                    id: 'feature-' + Date.now(),
+                    layerId: layerId,
+                    layer: layer,
+                    type: event.layerType
+                });
+
+                console.log('Feature created:', event.layerType);
+            });
+        } else {
+            console.warn('⚠️ Leaflet.Draw not loaded, drawing tools disabled');
+        }
 
         // 6. Setup event listeners
         console.log('🎯 Setting up event listeners...');
@@ -236,8 +275,14 @@ function handleAction(action, element, event) {
         case 'show-create-group-modal':
             Modals.showCreateGroupModal && Modals.showCreateGroupModal();
             break;
+        case 'select-group':
+            GroupManager.selectGroup && GroupManager.selectGroup(element);
+            break;
         case 'toggle-group':
             GroupManager.toggleGroup && GroupManager.toggleGroup(element);
+            break;
+        case 'toggle-all-layers-in-group':
+            GroupManager.toggleAllLayersInGroup && GroupManager.toggleAllLayersInGroup(event, element);
             break;
         case 'expand-all-groups':
             GroupManager.expandAllGroups && GroupManager.expandAllGroups();
@@ -300,6 +345,10 @@ function handleAction(action, element, event) {
             break;
         case 'clear-measurements':
             Measurement.clearMeasurements && Measurement.clearMeasurements();
+            break;
+        case 'open-measurement-settings':
+            // Toggle measurement settings panel
+            console.log('Measurement settings requested');
             break;
 
         // Legend actions
