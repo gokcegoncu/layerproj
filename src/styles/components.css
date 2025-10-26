@@ -1241,6 +1241,41 @@
    TOOLTIPS & LABELS
    ============================================ */
 
+/* Disable ALL Leaflet tooltip and marker animations globally */
+.leaflet-tooltip {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+.leaflet-tooltip-left,
+.leaflet-tooltip-right,
+.leaflet-tooltip-top,
+.leaflet-tooltip-bottom {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+}
+
+/* Disable marker animations */
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Disable all map pane animations */
+.leaflet-pane {
+    animation: none !important;
+}
+
+/* Disable popup animations */
+.leaflet-popup {
+    animation: none !important;
+    transition: none !important;
+}
+
 .measurement-tooltip {
     background: rgba(0, 0, 0, 0.8) !important;
     color: white !important;
@@ -1254,6 +1289,8 @@
     pointer-events: none !important;
     transform: none !important;
     position: relative !important;
+    animation: none !important;
+    transition: none !important;
 }
 
 .measurement-tooltip:before {
@@ -1276,7 +1313,9 @@
     pointer-events: none !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
     z-index: 1000 !important;
-    transition: opacity 0.2s ease !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
 }
 
 .feature-label.hidden {

@@ -300,6 +300,64 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Real-time style updates - Point controls
+    const pointControls = ['pointColor', 'pointSize', 'pointOpacity', 'pointShape', 'pointStyleType'];
+    pointControls.forEach(controlId => {
+        const control = document.getElementById(controlId);
+        if (control) {
+            const eventType = control.type === 'range' ? 'input' : 'change';
+            control.addEventListener(eventType, function() {
+                if (StyleManager.applyStyle) {
+                    StyleManager.applyStyle();
+                }
+            });
+        }
+    });
+
+    // Real-time style updates - Line controls
+    const lineControls = ['lineColor', 'lineWidth', 'lineOpacity', 'lineType'];
+    lineControls.forEach(controlId => {
+        const control = document.getElementById(controlId);
+        if (control) {
+            const eventType = control.type === 'range' ? 'input' : 'change';
+            control.addEventListener(eventType, function() {
+                if (StyleManager.applyStyle) {
+                    StyleManager.applyStyle();
+                }
+            });
+        }
+    });
+
+    // Real-time style updates - Polygon controls
+    const polygonControls = ['fillColor', 'fillOpacity', 'strokeColor', 'strokeWidth', 'strokeOpacity', 'strokeType'];
+    polygonControls.forEach(controlId => {
+        const control = document.getElementById(controlId);
+        if (control) {
+            const eventType = control.type === 'range' ? 'input' : 'change';
+            control.addEventListener(eventType, function() {
+                if (StyleManager.applyStyle) {
+                    StyleManager.applyStyle();
+                }
+            });
+        }
+    });
+
+    // Real-time label updates - Font size and colors
+    const labelStyleControls = ['fontSize', 'fontColor', 'haloColor', 'haloWidth'];
+    labelStyleControls.forEach(controlId => {
+        const control = document.getElementById(controlId);
+        if (control) {
+            const eventType = control.type === 'range' ? 'input' : 'change';
+            control.addEventListener(eventType, function() {
+                const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
+                const showLabels = document.getElementById('showLabels')?.checked;
+                if (activeLayerId && activeLayerId !== 'default-layer' && showLabels) {
+                    LabelManager.applyLabels(activeLayerId);
+                }
+            });
+        }
+    });
 }
 
 /**
