@@ -2,6 +2,139 @@
 
 Tüm önemli değişiklikler bu dosyada belgelenmektedir.
 
+## [3.8.0] - 2025-10-26
+
+### 🚀 MAJOR UPDATE: Real GIS Features
+
+Bu versiyon tam profesyonel bir GIS sistemine dönüştürüldü.
+
+### 🆕 Yeni Özellikler
+
+#### Gerçek Isı Haritası (Heatmap) - Leaflet.heat
+
+- **Leaflet.heat plugin entegrasyonu**
+  - Gerçek bulut renk dağılımı görselleştirmesi
+  - Intensity-based gradient (mavi→yeşil→sarı→turuncu→kırmızı)
+  - Profesyonel heatmap layer
+  - Toggle ile aç/kapa
+  - Etki: Artık gerçek ısı haritası görünüyor! ✅
+
+#### Attribute Editor (Özellik Düzenleyici)
+
+- **Sağ tık context menüsü**
+  - Çizilen feature'lara sağ tıklayarak özellikler ekle
+  - "Özellikleri Düzenle" menüsü
+  - "Sil" menüsü
+
+- **Özellik Atama Modal'ı**
+  - İsim: Feature'a isim verin
+  - Açıklama: Detaylı açıklama ekleyin
+  - Değer (Numeric): Heatmap ve graduated stilinde kullanılır
+  - Kategori: Kategorik stilinde kullanılır
+  - Özel Alanlar (JSON): İstediğiniz ek alanlar
+
+- **Otomatik popup güncelleme**
+  - Eklenen özellikler anında popup'ta görünür
+  - QGIS-style attribute display
+
+#### Profesyonel GIS Workflow
+
+```
+1. Haritada çizim yapın (nokta, çizgi, poligon)
+   ↓
+2. Sağ tıklayarak özellikler ekleyin
+   - Değer: 125000
+   - Kategori: "Nüfus"
+   - İsim: "Merkez İlçe"
+   ↓
+3. "Isı Haritası" butonuna tıklayın
+   ↓
+4. Gerçek bulut renk dağılımı görün!
+```
+
+### 🗑️ Kaldırılanlar
+
+- **Demo veri sistemi tamamen kaldırıldı**
+  - Artık kullanıcı kendi verilerini oluşturuyor
+  - Daha profesyonel bir yaklaşım
+  - createDemoData(), toggleDemoMenu() vb. kaldırıldı
+
+### 🎨 UI Değişiklikleri
+
+- Demo Veri butonu → Isı Haritası butonu
+- Basit ve temiz arayüz
+- Sağ tık menüsü eklendi
+- Attribute editor modal eklendi
+
+### 📊 Teknik Detaylar
+
+#### Eklenen Kütüphaneler
+
+```html
+<!-- Leaflet.heat for real heatmap -->
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+```
+
+#### Yeni Fonksiyonlar
+
+- `showContextMenu(e, feature)` - Sağ tık menüsünü göster
+- `editFeatureAttributes()` - Attribute editor aç
+- `closeAttributeEditor()` - Attribute editor kapat
+- `saveFeatureAttributes()` - Özellikleri kaydet
+- `deleteFeatureFromContext()` - Sağ tıkla sil
+- `createHeatmapLayer()` - Gerçek heatmap oluştur
+- `toggleHeatmap()` - Heatmap aç/kapa
+
+#### Heatmap Parametreleri
+
+```javascript
+heatmapLayer = L.heatLayer(heatData, {
+    radius: 50,
+    blur: 35,
+    maxZoom: 17,
+    max: Math.max(...heatData.map(d => d[2])),
+    gradient: {
+        0.0: 'blue',
+        0.2: 'cyan',
+        0.4: 'lime',
+        0.6: 'yellow',
+        0.8: 'orange',
+        1.0: 'red'
+    }
+});
+```
+
+### ✅ Kullanım Talimatları
+
+1. **Nokta Çiz:**
+   - Haritada nokta çizim aracını seç
+   - Haritada istediğiniz yere tıklayın
+
+2. **Özellik Ekle:**
+   - Çizdiğiniz noktaya sağ tıklayın
+   - "Özellikleri Düzenle" seçin
+   - Değer alanına sayı girin (örn: 1000, 5000, 10000)
+   - Kaydet'e tıklayın
+
+3. **Birden Fazla Nokta:**
+   - Farklı değerlerle birkaç nokta daha çizin
+   - Her birine farklı değerler verin
+
+4. **Isı Haritası Oluştur:**
+   - Sol panelde "Isı Haritası" butonuna tıklayın
+   - Bulut renk dağılımı görünür! 🔥
+
+### 🎯 Avantajlar
+
+- ✅ Kullanıcı kendi verilerini oluşturur
+- ✅ Gerçek heatmap görselleştirmesi
+- ✅ QGIS-style attribute management
+- ✅ Profesyonel GIS workflow
+- ✅ Sağ tık context menüsü
+- ✅ JSON-based custom fields
+
+---
+
 ## [3.7.0] - 2025-10-25
 
 ### 🐛 KRİTİK DÜZELTMELER
