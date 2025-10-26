@@ -580,13 +580,14 @@ function handleAction(action, element, event) {
             break;
 
         // Create modal actions
-        case 'close-create-modal':
+        case 'close-create-modal': {
             const createModal = document.getElementById('createModal');
             if (createModal) {
                 createModal.style.display = 'none';
             }
             break;
-        case 'confirm-create':
+        }
+        case 'confirm-create': {
             console.log('Confirm create');
 
             // Get modal and determine create type
@@ -654,6 +655,7 @@ function handleAction(action, element, event) {
                 alert('❌ Hatalı işlem tipi!');
             }
             break;
+        }
 
         // Style modal tab switching
         case 'switch-tab':
