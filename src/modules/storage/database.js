@@ -126,9 +126,50 @@ function createTables() {
 }
 
 /**
- * Save database to localStorage
+ * Debounce timer for database saves
+ */
+let saveTimer = null;
+let pendingSave = false;
+
+/**
+ * Save database to localStorage (debounced)
  */
 export function saveDatabase() {
+    pendingSave = true;
+
+    // Clear existing timer
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+    }
+
+    // Set new timer
+    saveTimer = setTimeout(() => {
+        try {
+            if (!db) {
+                console.warn('⚠️ No database to save');
+                return;
+            }
+
+            const data = db.export();
+            const buffer = JSON.stringify(Array.from(data));
+            localStorage.setItem('gis_database', buffer);
+            // Reduced logging for performance
+            pendingSave = false;
+        } catch (error) {
+            console.error('❌ Error saving database:', error);
+        }
+    }, 500); // Debounce: save after 500ms of inactivity
+}
+
+/**
+ * Force immediate database save (for critical operations)
+ */
+export function saveDatabaseImmediate() {
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+    }
+
     try {
         if (!db) {
             console.warn('⚠️ No database to save');
@@ -138,7 +179,7 @@ export function saveDatabase() {
         const data = db.export();
         const buffer = JSON.stringify(Array.from(data));
         localStorage.setItem('gis_database', buffer);
-        console.log('💾 Database saved to localStorage');
+        pendingSave = false;
     } catch (error) {
         console.error('❌ Error saving database:', error);
     }
@@ -389,7 +430,7 @@ export function createFeature(id, layerId, type, geometry, properties = {}) {
             [id, layerId, type, geometryJson, propertiesJson]
         );
         saveDatabase();
-        console.log(`✅ Feature created in DB: ${id} for layer ${layerId}`);
+        // Logging removed for performance
         return true;
     } catch (error) {
         console.error('❌ Error creating feature:', error);

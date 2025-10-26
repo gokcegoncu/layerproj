@@ -145,7 +145,7 @@ async function initializeApplication() {
                         else if (event.layerType === 'polygon' || event.layerType === 'rectangle' || event.layerType === 'circle') featureType = 'polygon';
 
                         DB.createFeature(featureId, layerId, featureType, geometry, {});
-                        console.log(`✅ Feature saved to database: ${featureId}`);
+                        // Logging removed for performance
                     }
                 } catch (dbError) {
                     console.error('❌ Error saving feature to database:', dbError);
@@ -173,7 +173,7 @@ async function initializeApplication() {
                     }
                 }
 
-                console.log('Feature created:', event.layerType, 'on layer:', layerId);
+                // Logging removed for performance
 
                 // Keep layer selected after drawing
                 // Re-select the layer to maintain selection highlight
@@ -194,7 +194,7 @@ async function initializeApplication() {
                             const markerTool = control._toolbars.draw._modes.marker;
                             if (markerTool && markerTool.handler) {
                                 markerTool.handler.enable();
-                                console.log('Continuous point mode: marker tool re-enabled');
+                                // Logging removed for performance
                             }
                         }
                     }, 50);
@@ -320,7 +320,7 @@ function handleKeyboardShortcuts(event) {
  */
 function handleStateChange(event) {
     const { key, newValue, oldValue } = event.detail;
-    console.log(`State changed: ${key}`, { from: oldValue, to: newValue });
+    // Logging removed for performance - state changes happen frequently
 
     // Update global variables for backwards compatibility
     if (key === 'activeLayerId') {
@@ -552,10 +552,80 @@ function handleAction(action, element, event) {
                 attrEditor.style.display = 'none';
             }
             break;
-        case 'save-feature-attributes':
-            console.log('Save feature attributes');
-            // Save logic would go here
+        case 'save-feature-attributes': {
+            // Get values from modal
+            const name = document.getElementById('attrName').value.trim();
+            const description = document.getElementById('attrDescription').value.trim();
+            const value = document.getElementById('attrValue').value.trim();
+            const category = document.getElementById('attrCategory').value.trim();
+            const customText = document.getElementById('attrCustom').value.trim();
+
+            // Build properties object
+            const properties = {};
+            if (name) properties.name = name;
+            if (description) properties.description = description;
+            if (value) properties.value = parseFloat(value);
+            if (category) properties.category = category;
+
+            // Parse custom JSON if provided
+            if (customText) {
+                try {
+                    const customProps = JSON.parse(customText);
+                    Object.assign(properties, customProps);
+                } catch (e) {
+                    alert('⚠️ Özel alanlar geçerli JSON formatında değil!');
+                    return;
+                }
+            }
+
+            // Check if we have any properties to save
+            if (Object.keys(properties).length === 0) {
+                alert('⚠️ En az bir alan doldurulmalıdır!');
+                return;
+            }
+
+            // Check if we're editing a specific feature or assigning to all features in layer
+            if (window.editingFeatureId) {
+                // Edit single feature
+                const featureInfo = window.drawnLayers.find(f => f.id === window.editingFeatureId);
+                if (featureInfo) {
+                    featureInfo.properties = properties;
+                    DB.updateFeatureProperties(window.editingFeatureId, properties);
+
+                    if (Console && Console.logToConsole) {
+                        Console.logToConsole('Özellik güncellendi', 'success');
+                    }
+                }
+                window.editingFeatureId = null;
+            } else if (window.attributeAssignmentLayerId) {
+                // Assign to all features in layer
+                const layerId = window.attributeAssignmentLayerId;
+                const layerFeatures = window.layerFeatures[layerId] || [];
+
+                let updateCount = 0;
+                layerFeatures.forEach(feature => {
+                    const featureInfo = window.drawnLayers.find(f => f.id === feature.id);
+                    if (featureInfo) {
+                        featureInfo.properties = { ...featureInfo.properties, ...properties };
+                        DB.updateFeatureProperties(feature.id, featureInfo.properties);
+                        updateCount++;
+                    }
+                });
+
+                if (Console && Console.logToConsole) {
+                    Console.logToConsole(`${updateCount} özellik güncellendi`, 'success');
+                }
+
+                window.attributeAssignmentLayerId = null;
+            }
+
+            // Close modal
+            const modal = document.getElementById('attributeEditorModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
             break;
+        }
         case 'edit-feature-attributes':
             const attrEditorModal = document.getElementById('attributeEditorModal');
             if (attrEditorModal) {
@@ -683,10 +753,40 @@ function handleAction(action, element, event) {
             break;
 
         // Advanced style actions
-        case 'assign-field-values':
-            console.log('Assign field values');
-            // Field assignment logic would go here
+        case 'assign-field-values': {
+            // Open attribute editor for current layer's selected features
+            const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
+            if (!activeLayerId || activeLayerId === 'default-layer') {
+                alert('⚠️ Lütfen önce bir katman seçin!');
+                return;
+            }
+
+            const layerFeatures = window.layerFeatures[activeLayerId];
+            if (!layerFeatures || layerFeatures.length === 0) {
+                alert('⚠️ Seçili katmanda özellik bulunmuyor!');
+                return;
+            }
+
+            // Store the active layer for attribute assignment
+            window.attributeAssignmentLayerId = activeLayerId;
+
+            // Clear and show modal
+            document.getElementById('attrName').value = '';
+            document.getElementById('attrDescription').value = '';
+            document.getElementById('attrValue').value = '';
+            document.getElementById('attrCategory').value = '';
+            document.getElementById('attrCustom').value = '';
+
+            const modal = document.getElementById('attributeEditorModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+
+            if (Console && Console.logToConsole) {
+                Console.logToConsole(`Değer atama: ${layerFeatures.length} özellik`, 'info');
+            }
             break;
+        }
         case 'apply-categorized-style':
             console.log('Apply categorized style');
             CategorizedStyle.applyCategorizedStyle && CategorizedStyle.applyCategorizedStyle();
