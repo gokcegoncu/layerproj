@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - GIS App</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+        }
+        .test-box {
+            background: #2d2d2d;
+            border: 2px solid #00ff00;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { border-color: #00ff00; }
+        .error { border-color: #ff0000; color: #ff0000; }
+        .warning { border-color: #ffaa00; color: #ffaa00; }
+        h2 { color: #00aaff; }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 GIS Application Debug</h1>
+
+    <div class="test-box">
+        <h2>1. Environment Check</h2>
+        <div id="envCheck">Checking...</div>
+    </div>
+
+    <div class="test-box">
+        <h2>2. Library Check</h2>
+        <div id="libCheck">Checking...</div>
+    </div>
+
+    <div class="test-box">
+        <h2>3. File Check</h2>
+        <div id="fileCheck">Checking...</div>
+    </div>
+
+    <div class="test-box">
+        <h2>4. Console Logs</h2>
+        <div id="consoleLogs"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Actions</h2>
+        <button onclick="testMainApp()">Test Ana Uygulama</button>
+        <button onclick="testLeaflet()">Test Leaflet</button>
+        <button onclick="copyDebugInfo()">Copy Debug Info</button>
+    </div>
+
+    <script>
+        const logs = [];
+
+        function log(message, type = 'info') {
+            logs.push({ message, type, time: new Date().toISOString() });
+            console.log(`[${type}] ${message}`);
+            updateConsole();
+        }
+
+        function updateConsole() {
+            const div = document.getElementById('consoleLogs');
+            div.innerHTML = '<pre>' + logs.map(l =>
+                `[${l.time.split('T')[1].split('.')[0]}] ${l.type.toUpperCase()}: ${l.message}`
+            ).join('\n') + '</pre>';
+        }
+
+        // Environment Check
+        function checkEnvironment() {
+            const envCheck = document.getElementById('envCheck');
+            let html = '<ul>';
+
+            html += `<li>User Agent: ${navigator.userAgent}</li>`;
+            html += `<li>Browser: ${getBrowserName()}</li>`;
+            html += `<li>URL: ${window.location.href}</li>`;
+            html += `<li>Protocol: ${window.location.protocol}</li>`;
+            html += `<li>Host: ${window.location.host}</li>`;
+
+            html += '</ul>';
+            envCheck.innerHTML = html;
+            log('Environment checked');
+        }
+
+        function getBrowserName() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari')) return 'Safari';
+            if (ua.includes('Edge')) return 'Edge';
+            return 'Unknown';
+        }
+
+        // Library Check
+        async function checkLibraries() {
+            const libCheck = document.getElementById('libCheck');
+            let html = '<ul>';
+
+            // Check Leaflet
+            try {
+                const response = await fetch('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', { method: 'HEAD' });
+                html += `<li class="${response.ok ? 'success' : 'error'}">Leaflet CDN: ${response.status}</li>`;
+                log(`Leaflet CDN: ${response.status}`);
+            } catch (e) {
+                html += `<li class="error">Leaflet CDN: Failed (${e.message})</li>`;
+                log(`Leaflet CDN failed: ${e.message}`, 'error');
+            }
+
+            // Check sql.js
+            try {
+                const response = await fetch('https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js', { method: 'HEAD' });
+                html += `<li class="${response.ok ? 'success' : 'error'}">sql.js CDN: ${response.status}</li>`;
+                log(`sql.js CDN: ${response.status}`);
+            } catch (e) {
+                html += `<li class="warning">sql.js CDN: Failed (${e.message})</li>`;
+                log(`sql.js CDN failed: ${e.message}`, 'warning');
+            }
+
+            // Check if Leaflet is loaded
+            html += `<li class="${typeof L !== 'undefined' ? 'success' : 'error'}">Leaflet Object: ${typeof L !== 'undefined' ? 'Available' : 'Not loaded'}</li>`;
+
+            html += '</ul>';
+            libCheck.innerHTML = html;
+        }
+
+        // File Check
+        async function checkFiles() {
+            const fileCheck = document.getElementById('fileCheck');
+            let html = '<ul>';
+
+            const files = [
+                '/main.js',
+                '/styles/main.css',
+                '/src/index.html',
+                '/test.html'
+            ];
+
+            for (const file of files) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    html += `<li class="${response.ok ? 'success' : 'error'}">${file}: ${response.status}</li>`;
+                    log(`${file}: ${response.status}`);
+                } catch (e) {
+                    html += `<li class="error">${file}: Failed</li>`;
+                    log(`${file}: Failed`, 'error');
+                }
+            }
+
+            html += '</ul>';
+            fileCheck.innerHTML = html;
+        }
+
+        function testMainApp() {
+            log('Testing main application...');
+            window.location.href = '/';
+        }
+
+        function testLeaflet() {
+            log('Testing Leaflet...');
+            if (typeof L === 'undefined') {
+                alert('❌ Leaflet not loaded! Loading from CDN...');
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.onload = () => {
+                    alert('✅ Leaflet loaded! Version: ' + L.version);
+                    log('Leaflet loaded: ' + L.version);
+                };
+                document.head.appendChild(script);
+            } else {
+                alert('✅ Leaflet is loaded! Version: ' + L.version);
+                log('Leaflet available: ' + L.version);
+            }
+        }
+
+        function copyDebugInfo() {
+            const info = `
+=== GIS Application Debug Info ===
+Time: ${new Date().toISOString()}
+Browser: ${getBrowserName()}
+URL: ${window.location.href}
+
+=== Logs ===
+${logs.map(l => `[${l.time}] ${l.type}: ${l.message}`).join('\n')}
+
+=== Console Errors ===
+(Open F12 Console and copy any red errors here)
+            `.trim();
+
+            navigator.clipboard.writeText(info).then(() => {
+                alert('✅ Debug info copied to clipboard!');
+            }).catch(() => {
+                alert('❌ Could not copy. Please copy manually from console.');
+                console.log(info);
+            });
+        }
+
+        // Auto-run checks
+        window.addEventListener('load', () => {
+            log('Debug page loaded');
+            checkEnvironment();
+            checkLibraries();
+            checkFiles();
+        });
+
+        // Capture errors
+        window.addEventListener('error', (e) => {
+            log(`Error: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+    </script>
+</body>
+</html>
