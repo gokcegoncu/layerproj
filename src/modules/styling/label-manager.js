@@ -21,15 +21,12 @@ export function applyLabels(layerId) {
     const haloColor = document.getElementById('haloColor')?.value || '#ffffff';
     const haloWidth = document.getElementById('haloWidth')?.value || 1;
 
-    console.log('Applying labels:', { layerId, showLabels, labelField, fontSize });
-
     // Get layer features
     const layerFeatures = window.layerFeatures[layerId] || [];
 
     layerFeatures.forEach(feature => {
         const featureInfo = window.drawnLayers.find(f => f.id === feature.id);
         if (!featureInfo || !featureInfo.layer) {
-            console.warn(`⚠️ Feature ${feature.id} has no layer`);
             return;
         }
 
@@ -37,7 +34,6 @@ export function applyLabels(layerId) {
 
         // Check if layer is on map
         if (!window.map.hasLayer(layer)) {
-            console.warn(`⚠️ Layer ${feature.id} not on map, adding it...`);
             layer.addTo(window.map);
         }
 
@@ -65,15 +61,11 @@ export function applyLabels(layerId) {
             }
 
             if (!labelLatLng) {
-                console.warn(`⚠️ Could not determine position for ${feature.id}`);
                 return;
             }
 
             // Get label text from properties
             let labelText = '';
-
-            // Debug: log properties
-            console.log(`Feature ${feature.id} properties:`, featureInfo.properties);
 
             if (featureInfo.properties && featureInfo.properties[labelField] !== undefined) {
                 // Found the property value
@@ -96,9 +88,8 @@ export function applyLabels(layerId) {
                 // Calculate length for lines
                 labelText = 'Length';
             } else {
-                // No value found - show field name for debugging
+                // No value found - use placeholder
                 labelText = `[${labelField}]`;
-                console.warn(`No value for field "${labelField}" in feature ${feature.id}`);
             }
 
             // Create tooltip style
@@ -141,9 +132,6 @@ export function applyLabels(layerId) {
                 const tooltipElement = tooltip.getElement();
                 if (tooltipElement) {
                     tooltipElement.style.cssText = tooltipStyle;
-                    console.log(`✅ Label positioned at [${labelLatLng.lat.toFixed(4)}, ${labelLatLng.lng.toFixed(4)}]: "${labelText}"`);
-                } else {
-                    console.warn(`⚠️ Tooltip element not found for ${feature.id}`);
                 }
             }, 50);
         } else {
