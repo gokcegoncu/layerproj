@@ -23,6 +23,10 @@ export function createHeatmapLayer(radius = 50, blur = 35) {
         heatmapLayer = null;
     }
 
+    // Debug: Log all drawn layers
+    console.log('🔍 Total drawn layers:', window.drawnLayers.length);
+    console.log('🔍 Drawn layers types:', window.drawnLayers.map(l => ({ id: l.id, type: l.type, hasValue: l.properties?.value !== undefined })));
+
     // Find points with value
     const pointsWithValue = window.drawnLayers.filter(l =>
         l.type === 'point' &&
@@ -32,8 +36,11 @@ export function createHeatmapLayer(radius = 50, blur = 35) {
         l.layer.getLatLng
     );
 
+    console.log(`🔍 Points with values found: ${pointsWithValue.length}`);
+
     if (pointsWithValue.length === 0) {
         showNotification('⚠️ No points with values found! First add values to points.', 'warning');
+        console.warn('⚠️ Heatmap requires points with numeric "value" property');
         return null;
     }
 

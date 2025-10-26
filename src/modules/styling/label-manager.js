@@ -84,17 +84,19 @@ export function applyLabels(layerId) {
                     permanent: true,
                     direction: 'center',
                     className: 'feature-label',
-                    opacity: 0.9
-                });
+                    opacity: 1
+                }).openTooltip(); // Force tooltip to open and render
 
-                // Apply custom style to tooltip
-                const tooltip = layer.getTooltip();
-                if (tooltip) {
-                    const tooltipElement = tooltip.getElement();
-                    if (tooltipElement) {
-                        tooltipElement.style.cssText = tooltipStyle;
+                // Apply custom style to tooltip after it's rendered
+                setTimeout(() => {
+                    const tooltip = layer.getTooltip();
+                    if (tooltip) {
+                        const tooltipElement = tooltip.getElement();
+                        if (tooltipElement) {
+                            tooltipElement.style.cssText = tooltipStyle;
+                        }
                     }
-                }
+                }, 10); // Small delay to ensure DOM element exists
             }
         } else {
             // Remove tooltip
