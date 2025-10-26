@@ -617,7 +617,9 @@
     }
 
     .map-container {
-        height: 45vh;
+        flex: 1;
+        height: 100%;
+        min-height: 0;
     }
 
     .right-toolbar {

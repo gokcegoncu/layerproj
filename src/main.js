@@ -475,16 +475,26 @@ function handleAction(action, element, event) {
 
         // Style modal tab switching
         case 'switch-tab':
+            // Remove active class from all tabs
             document.querySelectorAll('.style-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
+            // Add active class to clicked tab
             element.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
+
+            // Hide all tab content divs
+            const tabContents = ['styleContent', 'labelContent', 'themeContent'];
+            tabContents.forEach(id => {
+                const content = document.getElementById(id);
+                if (content) {
+                    content.style.display = 'none';
+                }
             });
-            const tabContent = document.getElementById(param + 'Tab');
-            if (tabContent) {
-                tabContent.classList.add('active');
+
+            // Show the selected tab content
+            const selectedContent = document.getElementById(param + 'Content');
+            if (selectedContent) {
+                selectedContent.style.display = 'block';
             }
             break;
 
@@ -530,8 +540,17 @@ function handleAction(action, element, event) {
             break;
         case 'zoom-to-extent':
             console.log('Zoom to extent');
-            if (window.map) {
-                window.map.fitBounds(window.drawnItems.getBounds());
+            if (window.map && window.drawnItems) {
+                const layers = window.drawnItems.getLayers();
+                if (layers && layers.length > 0) {
+                    window.map.fitBounds(window.drawnItems.getBounds());
+                } else {
+                    console.log('No features to zoom to');
+                    // Optionally, show a notification
+                    if (Console && Console.logToConsole) {
+                        Console.logToConsole('No features drawn yet', 'warning');
+                    }
+                }
             }
             break;
 
@@ -685,12 +704,33 @@ window.Measurement = Measurement;
 window.Coordinates = Coordinates;
 
 /**
- * Initialize application when DOM is ready
+ * Wait for external libraries to load
  */
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApplication);
-} else {
+function waitForExternalLibraries() {
+    return new Promise((resolve) => {
+        const checkLibraries = () => {
+            if (window.L && window.L.Control && window.L.Control.Draw && window.proj4) {
+                resolve();
+            } else {
+                setTimeout(checkLibraries, 50);
+            }
+        };
+        checkLibraries();
+    });
+}
+
+/**
+ * Initialize application when DOM and libraries are ready
+ */
+async function init() {
+    await waitForExternalLibraries();
     initializeApplication();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
 }
 
 /**
