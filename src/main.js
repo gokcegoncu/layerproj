@@ -187,6 +187,27 @@ async function initializeApplication() {
             invalidateMapSize(window.map);
         });
 
+        // 10. Setup database import handler
+        const dbImportFile = document.getElementById('dbImportFile');
+        if (dbImportFile) {
+            dbImportFile.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    try {
+                        await DB.importDatabase(file);
+                        alert('✅ Database başarıyla içe aktarıldı! Sayfa yenileniyor...');
+                        location.reload();
+                    } catch (error) {
+                        console.error('Import error:', error);
+                        alert('❌ Import hatası: ' + error.message);
+                    }
+                }
+            });
+        }
+
+        // 11. Update database status indicator
+        updateDatabaseStatus();
+
         console.log('✅ Application initialized successfully!');
 
     } catch (error) {
@@ -580,6 +601,20 @@ function handleAction(action, element, event) {
             Legend.hideLegend && Legend.hideLegend();
             break;
 
+        // Database actions
+        case 'export-database':
+            if (DB && DB.exportDatabase) {
+                DB.exportDatabase();
+                console.log('📥 Database exported');
+            } else {
+                console.error('Database mevcut değil');
+                alert('Database mevcut değil. Yeni veri ekleyin.');
+            }
+            break;
+        case 'import-database':
+            document.getElementById('dbImportFile')?.click();
+            break;
+
         // Map actions
         case 'zoom-to-layer':
             const layerToZoom = element.closest('.layer-item');
@@ -702,6 +737,33 @@ function handleContextMenu(event) {
     if (window.continuousPointMode && event.target.closest('#map')) {
         event.preventDefault();
         // stopContinuousPointMode();
+    }
+}
+
+/**
+ * Update database status indicator
+ */
+function updateDatabaseStatus() {
+    const dbStatus = document.getElementById('dbStatus');
+    if (!dbStatus) return;
+
+    try {
+        const stats = DB.getDatabaseStats();
+        const hasData = stats.groups > 0 || stats.layers > 0 || stats.features > 0;
+
+        if (DB.getDatabase()) {
+            dbStatus.style.background = '#28a745';
+            dbStatus.textContent = `DB: ✓ (${stats.groups}G/${stats.layers}L/${stats.features}F)`;
+            dbStatus.title = `Database OK - ${stats.groups} grup, ${stats.layers} katman, ${stats.features} çizim`;
+        } else {
+            dbStatus.style.background = '#dc3545';
+            dbStatus.textContent = 'DB: ✗';
+            dbStatus.title = 'Database mevcut değil';
+        }
+    } catch (error) {
+        dbStatus.style.background = '#ffc107';
+        dbStatus.textContent = 'DB: ⚠';
+        dbStatus.title = 'Database hatalı';
     }
 }
 
@@ -865,6 +927,9 @@ async function loadDataFromDatabase() {
 
         const stats = DB.getDatabaseStats();
         console.log(`✅ Loaded ${stats.groups} groups, ${stats.layers} layers, ${stats.features} features`);
+
+        // Update status indicator
+        updateDatabaseStatus();
     } catch (error) {
         console.error('❌ Error loading data from database:', error);
     }

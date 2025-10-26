@@ -20,13 +20,21 @@
                 <h2>
                     <span style="font-size: 18px; color: #ffc107;">🗂️</span>
                     Katmanlar
+                    <span id="dbStatus" style="font-size: 10px; margin-left: 8px; padding: 2px 6px; border-radius: 3px; background: #28a745; color: white;" title="Database durumu">DB: ✓</span>
                 </h2>
                 <div class="header-actions">
+                    <button class="filter-btn" title="Veritabanını Dışa Aktar" data-action="export-database" style="margin-right: 4px;">
+                        <span style="font-size: 14px;">💾</span>
+                    </button>
+                    <button class="filter-btn" title="Veritabanını İçe Aktar" data-action="import-database" style="margin-right: 4px;">
+                        <span style="font-size: 14px;">📥</span>
+                    </button>
                     <button class="filter-btn" title="Filtrele" data-action="toggle-layer-filter">
                         <span style="font-size: 14px;">🔍</span>
                     </button>
                 </div>
             </div>
+            <input type="file" id="dbImportFile" accept=".sqlite,.db" style="display: none;">
 
             <!-- Arama ve Filtre -->
             <div class="search-filter-panel" id="searchFilterPanel" style="display: none;">
