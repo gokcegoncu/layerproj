@@ -6,6 +6,7 @@
 import { AppState } from '../core/state.js';
 import { showToast, showNotification } from '../ui/notifications.js';
 import { hexToRgba } from '../utils/helpers.js';
+import { applyLabelsToAllFeatures, removeAllLabels } from './label-manager.js';
 
 // System default styles
 const systemDefaultStyles = {
