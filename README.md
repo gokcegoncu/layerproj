@@ -54,22 +54,23 @@ npm run format           # Prettier formatting
 npm run format:check     # Format kontrolü
 ```
 
-## 🎯 Hangi Dosyayı Kullanmalıyım?
+## 🎯 Nasıl Kullanmalıyım?
 
 ### ✅ Önerilen Kullanım
 
-#### Development (Modular)
+#### Development (Geliştirme)
 ```bash
 npm run dev
 # → http://localhost:3000
 # Kaynak: src/index.html + modules/
+# Hot Module Reloading aktif
 ```
 
-#### Production (Standalone)
-```
-cbs_katman_yonetim_v3.9.html
-# Tek dosya, tüm özellikler dahili
-# Direkt tarayıcıda açılabilir
+#### Production (Üretim)
+```bash
+npm run build
+# → dist/ klasörüne build oluşturulur
+# Minified, optimized, production-ready
 ```
 
 ## 🏗️ Proje Yapısı
@@ -296,6 +297,170 @@ Test ortamında aşağıdaki kütüphaneler mock'lanır:
 
 **Total:** 24 modules, 8,654 lines of code
 
+## 📖 Detaylı Kullanım Rehberi
+
+### Veri Saklama Sistemi
+
+**Veriler Nerede Tutuluyor?**
+- ✅ **Browser localStorage** - Tarayıcınızın hafızasında
+- ✅ **sql.js** - JavaScript ile SQLite veritabanı
+- ✅ **Otomatik kayıt** - Her işlemde localStorage'a kaydedilir
+
+**Önemli Bilgiler:**
+- ⚠️ **Sadece bu tarayıcıda** - Başka cihazda görünmez
+- ⚠️ **Cache temizliği** - Cache temizlerseniz veriler kaybolur
+- ✅ **Export/Import** - Yedekleme için kullanın
+
+### Temel Kullanım Adımları
+
+**1. Grup Oluşturma**
+```
+Sağ Panel → "Grup Ekle" butonu → İsim girin → "Oluştur"
+```
+
+**2. Katman Oluşturma**
+```
+Grubu seç → "Katman Ekle" → İsim girin → "Oluştur"
+```
+**Önemli:** Katman oluşturmadan önce grup seçmelisiniz!
+
+**3. Çizim Yapma**
+```
+1. Katmanı seç (highlight olacak)
+2. Sağ alt köşeden çizim aracını seç
+3. Haritada çiz
+✅ Çizimler otomatik olarak seçili katmana kaydedilir!
+```
+
+### Yedekleme ve Geri Yükleme
+
+**Export (Yedek Alma)**
+```
+Sağ Panel → 💾 butonu → .sqlite dosyası indirilir
+```
+
+**Import (Geri Yükleme)**
+```
+Sağ Panel → 📥 butonu → .sqlite dosyasını seç
+```
+
+### İpuçları
+
+**Düzenli Yedekleme:** Her önemli işlemden sonra export yapın
+
+**Katman Organizasyonu:** Grupları mantıklı kullanın
+```
+✅ İyi:
+  - Binalar
+    - Konutlar
+    - Ticari
+  - Altyapı
+    - Yollar
+    - Elektrik
+```
+
+## 🗄️ Veritabanı Yönetimi
+
+### Database Yönetimi
+- ✅ **Browser-based SQLite**: sql.js kullanılarak tarayıcıda çalışan SQLite veritabanı
+- ✅ **LocalStorage Entegrasyonu**: Veritabanı otomatik olarak localStorage'a kaydedilir
+- ✅ **Import/Export**: Veritabanını dışa/içe aktarma desteği
+- ✅ **Kalıcı Veri**: Sayfa yenilendiğinde tüm veriler korunur
+
+### Veri Modeli
+
+**Groups (Gruplar)**
+```sql
+CREATE TABLE groups (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    expanded INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+**Layers (Katmanlar)**
+```sql
+CREATE TABLE layers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    group_id TEXT NOT NULL,
+    visible INTEGER DEFAULT 1,
+    position INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+)
+```
+
+**Features (Çizimler/Özellikler)**
+```sql
+CREATE TABLE features (
+    id TEXT PRIMARY KEY,
+    layer_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    geometry TEXT NOT NULL,
+    properties TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (layer_id) REFERENCES layers(id) ON DELETE CASCADE
+)
+```
+
+### Database Fonksiyonları
+
+```javascript
+// Database'i başlat
+await DB.initDatabase();
+
+// Grup oluştur
+DB.createGroup('group-1', 'Bina Katmanları', 1);
+
+// Katman oluştur
+DB.createLayer('layer-1', 'Binalar', 'group-1', 1);
+
+// Feature (çizim) ekle
+DB.createFeature('feature-1', 'layer-1', 'polygon', geometryGeoJSON, {});
+
+// İstatistikler
+const stats = DB.getDatabaseStats();
+console.log(stats); // { groups: 5, layers: 20, features: 150 }
+```
+
+### Console'dan Kontrol
+
+```javascript
+// F12 → Console
+
+// Database istatistikleri
+window.DB.getDatabaseStats()
+
+// Tüm grupları listele
+window.DB.getAllGroups()
+
+// Belirli bir katmanın feature'larını listele
+window.DB.getFeaturesByLayer('layer-123456789')
+
+// Database'i tamamen temizle
+window.DB.clearDatabase()
+```
+
+### Veri Limitleri
+
+**localStorage Sınırları**
+
+| Tarayıcı | Max Boyut |
+|----------|-----------|
+| Chrome   | ~10 MB    |
+| Firefox  | ~10 MB    |
+| Safari   | ~5 MB     |
+| Edge     | ~10 MB    |
+
+**Tahmini Veri Kapasitesi:**
+- **1000 nokta** = ~500 KB
+- **100 poligon** = ~200 KB
+- **10 grup + 50 katman** = ~50 KB
+- **Toplam:** ~5-10 MB'a kadar rahat kullanılabilir
+
 ## 🔍 Sorun Giderme
 
 ### Yaygın Sorunlar
@@ -305,6 +470,8 @@ Test ortamında aşağıdaki kütüphaneler mock'lanır:
 - İnternet bağlantınızı kontrol edin (Leaflet CDN erişimi)
 - Tarayıcı konsolunu kontrol edin (F12)
 - CORS hatası varsa dosyayı web sunucudan çalıştırın
+- Hard refresh deneyin (Ctrl+Shift+R)
+- Dev server'ı yeniden başlatın
 
 #### 2. npm install hatası
 **Çözüm:**
@@ -333,6 +500,80 @@ npm run lint:fix
 npm run lint
 ```
 
+#### 5. Database Çalışmıyor
+
+**Kontrol:**
+```javascript
+// F12 → Console
+window.DB.getDatabaseStats()
+```
+
+**Beklenen:**
+```json
+{ groups: 0, layers: 0, features: 0 }
+```
+
+**Çözüm:** Database olmadan da kullanılabilir, sadece sayfa yenilendiğinde veriler kaybolur.
+
+#### 6. Çizimler Kayboldu
+
+**Neden olabilir:**
+- Cache temizlendi
+- Başka tarayıcı kullanıldı
+- localStorage doldu
+
+**Çözüm:**
+1. Export ile düzenli yedek alın
+2. İhtiyaç halinde import edin
+
+### Hızlı Tanı Komutları
+
+Browser console'da (`http://localhost:3000/`) çalıştırın:
+
+```javascript
+// Leaflet yüklü mü?
+console.log('Leaflet:', typeof L !== 'undefined' ? '✅ Loaded' : '❌ Not loaded');
+
+// Leaflet.Draw yüklü mü?
+console.log('Leaflet.Draw:', typeof L.Draw !== 'undefined' ? '✅ Loaded' : '❌ Not loaded');
+
+// proj4 yüklü mü?
+console.log('proj4:', typeof proj4 !== 'undefined' ? '✅ Loaded' : '❌ Not loaded');
+
+// Map başlatıldı mı?
+console.log('Map:', window.map ? '✅ Initialized' : '❌ Not initialized');
+
+// Database yüklü mü?
+console.log('Database:', window.DB ? '✅ Module loaded' : '❌ Module not loaded');
+```
+
+### Beklenen Console Çıktısı (Çalışıyor)
+
+```
+🚀 Initializing CBS GIS Application...
+🗄️ Initializing database...
+✅ Database ready
+📍 Initializing map...
+🗺️ Setting up coordinate system...
+📏 Initializing measurement tools...
+💬 Initializing message console...
+✏️ Setting up drawing controls...
+🎯 Setting up event listeners...
+📂 Loading data from database...
+Found 0 groups in database
+✅ Loaded 0 groups, 0 layers, 0 features
+🎨 Initializing UI components...
+✅ Application initialized successfully!
+```
+
+### Son Çare
+
+Hiçbir şey işe yaramazsa:
+1. **Cache temizle**: Ctrl+Shift+Delete
+2. **Farklı tarayıcı dene**: Chrome, Firefox, Edge
+3. **Dev server'ı yeniden başlat**: Kill ve `npm run dev`
+4. **Paketleri yeniden yükle**: `npm install`
+
 ## 📈 Gelecek İyileştirmeler
 
 ### Öncelikli
@@ -352,6 +593,163 @@ npm run lint
 - [ ] GeoJSON import/export
 - [ ] Backend API integration
 - [ ] Real-time collaboration
+
+## 👨‍💻 Geliştirici Rehberi
+
+### Mimari
+
+#### Modüler Yapı
+
+Proje ES6 modül sistemi kullanıyor. Her modül tek bir sorumluluğa sahip:
+
+```javascript
+// Modül import örneği
+import { AppState } from './modules/core/state.js';
+import * as LayerManager from './modules/layers/layer-manager.js';
+```
+
+#### Event Delegation Sistemi
+
+HTML'de inline event handler'lar yerine `data-action` attribute'ları kullanılıyor:
+
+```html
+<!-- Eski yöntem (kullanılmıyor) -->
+<button onclick="createLayer()">Katman Ekle</button>
+
+<!-- Yeni yöntem -->
+<button data-action="show-create-layer-modal">Katman Ekle</button>
+```
+
+Event delegation `main.js`'de merkezi olarak yönetiliyor:
+
+```javascript
+function handleAction(action, element, event) {
+  const [actionName, param] = action.split(':');
+
+  switch (actionName) {
+    case 'show-create-layer-modal':
+      Modals.showCreateLayerModal && Modals.showCreateLayerModal();
+      break;
+    case 'start-drawing':
+      DrawingTools.startDrawing && DrawingTools.startDrawing(param);
+      break;
+    // ...
+  }
+}
+```
+
+#### State Management
+
+Merkezi state yönetimi `AppState` ile yapılıyor:
+
+```javascript
+import { AppState } from './modules/core/state.js';
+
+// State oku
+const layerId = AppState.get('activeLayerId');
+
+// State yaz
+AppState.set('activeLayerId', 'layer-1');
+
+// State değişikliklerini dinle
+document.addEventListener('state:changed', (event) => {
+  const { key, newValue, oldValue } = event.detail;
+  console.log(`${key} changed from ${oldValue} to ${newValue}`);
+});
+```
+
+### CSS Yapısı
+
+CSS modüler olarak ayrılmış:
+
+1. **variables.css** - CSS custom properties (renkler, spacing, vb.)
+2. **reset.css** - Global reset ve base styles
+3. **layout.css** - Layout ve grid sistemleri
+4. **components.css** - UI bileşenleri
+5. **themes.css** - Dark mode ve temalar
+
+Tüm CSS dosyaları `main.css` tarafından import ediliyor.
+
+### Yeni Modül Ekleme
+
+```javascript
+// 1. Yeni modül dosyası oluştur
+// src/modules/features/my-feature.js
+
+/**
+ * My Feature Module
+ * @module features/my-feature
+ */
+
+import { AppState } from '../core/state.js';
+
+/**
+ * Initialize feature
+ */
+export function initMyFeature() {
+  // Implementation
+}
+
+export function doSomething(param) {
+  // Implementation
+}
+
+// 2. main.js'e import et
+import * as MyFeature from './modules/features/my-feature.js';
+
+// 3. Global olarak expose et (opsiyonel)
+window.MyFeature = MyFeature;
+
+// 4. Event handler ekle (gerekirse)
+case 'my-action':
+  MyFeature.doSomething && MyFeature.doSomething(param);
+  break;
+```
+
+### Build Süreci
+
+Vite kullanılıyor:
+
+1. **Development**: Hot Module Replacement (HMR) ile hızlı geliştirme
+2. **Production**:
+   - Terser ile minification
+   - CSS extraction ve minification
+   - Tree shaking
+   - Code splitting (Leaflet ve Proj4 ayrı chunk'larda)
+   - Sourcemap oluşturma
+
+Build çıktısı:
+```
+dist/
+├── index.html              # Ana HTML
+├── assets/
+│   ├── main-[hash].css     # Minified CSS (~45 KB)
+│   ├── main-[hash].js      # Minified JS (~105 KB)
+│   ├── leaflet-[hash].js   # Leaflet chunk
+│   └── proj4-[hash].js     # Proj4 chunk
+```
+
+### Debugging
+
+**Development Mode**
+
+```bash
+npm run dev
+```
+
+Tarayıcı console'da:
+- Tüm modüller `window` nesnesinde mevcut
+- `window.AppState.getAll()` ile tüm state'i görebilirsiniz
+- Sourcemap'ler sayesinde orijinal kodda debug yapabilirsiniz
+
+**Production Build Debug**
+
+```bash
+npm run build
+npm run preview
+```
+
+Production build'de sourcemap'ler aktif, bu sayede browser dev tools'da debug yapılabilir.
 
 ## 🤝 Katkıda Bulunma
 
