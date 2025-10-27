@@ -9,7 +9,7 @@ import { detectLineTypeFromDashArray } from '../styling/style-manager.js';
 // Legend state
 let legendVisible = false;
 let legendCollapsed = false;
-let legendDragData = null;
+const legendDragData = null;
 
 /**
  * Toggle legend visibility

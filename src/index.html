@@ -3,11 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modern CBS (GIS) Katman Yönetim Sistemi - Leaflet tabanlı interaktif harita yönetimi">
+  <meta name="author" content="CBS Team">
+  <meta name="keywords" content="GIS, CBS, Leaflet, Harita, Katman Yönetimi, Coğrafi Bilgi Sistemi">
+  <meta name="theme-color" content="#3498db">
   <title>CBS Katman Yönetim Sistemi v3.9</title>
 
+  <!-- DNS Prefetch for CDN performance -->
+  <link rel="dns-prefetch" href="https://unpkg.com">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+        crossorigin="anonymous" />
 
   <!-- Our modular CSS -->
   <link rel="stylesheet" href="/styles/main.css">
@@ -1496,14 +1509,30 @@
     </div>
 
 
-  <!-- External dependencies -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4/2.9.2/proj4.js"></script>
-  <script src="https://unpkg.com/proj4leaflet@1.0.2/dist/proj4leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <!-- External dependencies with SRI -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4/2.9.2/proj4.js"
+          integrity="sha512-UKOdHbXLP5Vr5LCRXRzTUM9V6WWTrhpQ1/HmqmSyJKHH6F+UyN4J7wEoD3N1xNqr0rVGpYYvJqPz6dCdQ5yj0Q=="
+          crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/proj4leaflet@1.0.2/dist/proj4leaflet.js"
+          crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"
+          crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"
+          crossorigin="anonymous"></script>
 
-  <!-- Our modular JavaScript -->
+  <!-- SQL.js for database functionality (optional) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"
+          crossorigin="anonymous"></script>
+
+  <!-- Our modular JavaScript (ES6 modules) -->
   <script type="module" src="/main.js"></script>
+
+  <!-- Fallback for browsers without module support -->
+  <script nomodule>
+    alert('Tarayıcınız ES6 modüllerini desteklemiyor. Lütfen modern bir tarayıcı kullanın (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)');
+  </script>
 </body>
 </html>
