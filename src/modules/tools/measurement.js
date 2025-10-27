@@ -8,7 +8,7 @@ import { showToast, showNotification } from '../ui/notifications.js';
 
 // Measurement state
 let measurementTools = null;
-let activeMeasurement = null;
+const activeMeasurement = null;
 let measurementLayers = [];
 
 /**

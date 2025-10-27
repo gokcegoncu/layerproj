@@ -1194,7 +1194,7 @@ export function setStyleControlsEnabled(enabled) {
     ];
 
     let foundControls = 0;
-    let missingControls = [];
+    const missingControls = [];
 
     controls.forEach(controlId => {
         const control = document.getElementById(controlId);

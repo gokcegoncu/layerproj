@@ -1,77 +1,50 @@
 /**
- * Test setup file for Vitest
+ * Test Environment Setup
+ * Configures JSDOM and mocks for testing
  */
 
-import { beforeAll, afterAll, afterEach } from 'vitest';
-import { JSDOM } from 'jsdom';
-
-// Setup JSDOM for browser environment
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-  url: 'http://localhost',
-  pretendToBeVisual: true,
-});
-
-global.window = dom.window;
-global.document = dom.window.document;
-global.navigator = dom.window.navigator;
-global.HTMLElement = dom.window.HTMLElement;
+import { vi } from 'vitest';
 
 // Mock Leaflet
 global.L = {
-  map: () => ({
-    setView: () => {},
-    addLayer: () => {},
-    removeLayer: () => {},
-    on: () => {},
-    off: () => {},
-  }),
-  tileLayer: () => ({
-    addTo: () => {},
-  }),
-  layerGroup: () => ({
-    addTo: () => {},
-    clearLayers: () => {},
-  }),
-  marker: () => ({
-    addTo: () => {},
-    bindPopup: () => {},
-  }),
-  polyline: () => ({
-    addTo: () => {},
-    bindPopup: () => {},
-  }),
-  polygon: () => ({
-    addTo: () => {},
-    bindPopup: () => {},
-  }),
+  map: vi.fn(),
+  tileLayer: vi.fn(),
+  layerGroup: vi.fn(),
+  featureGroup: vi.fn(),
+  marker: vi.fn(),
+  polyline: vi.fn(),
+  polygon: vi.fn(),
+  circle: vi.fn(),
+  Control: {
+    Draw: vi.fn(),
+  },
+  Draw: {
+    Event: {
+      CREATED: 'draw:created',
+      EDITED: 'draw:edited',
+      DELETED: 'draw:deleted',
+    },
+  },
+  geoJSON: vi.fn(),
 };
+
+// Mock proj4
+global.proj4 = vi.fn();
 
 // Mock localStorage
-global.localStorage = {
-  store: {},
-  getItem(key) {
-    return this.store[key] || null;
-  },
-  setItem(key, value) {
-    this.store[key] = String(value);
-  },
-  removeItem(key) {
-    delete this.store[key];
-  },
-  clear() {
-    this.store = {};
-  },
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
+global.localStorage = localStorageMock;
 
-beforeAll(() => {
-  console.log('🧪 Test environment initialized');
-});
+// Mock initSqlJs
+global.initSqlJs = vi.fn();
 
-afterEach(() => {
-  // Clear localStorage after each test
-  global.localStorage.clear();
-});
-
-afterAll(() => {
-  console.log('✅ Test environment cleaned up');
+// Test lifecycle hooks
+beforeEach(() => {
+  // Clear all mocks before each test
+  vi.clearAllMocks();
 });
