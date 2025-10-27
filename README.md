@@ -54,32 +54,30 @@ npm run format           # Prettier formatting
 npm run format:check     # Format kontrolü
 ```
 
-## 🎯 Hangi Dosyayı Kullanmalıyım?
+## 🎯 Kullanım
 
-### ✅ Önerilen Kullanım
-
-#### Development (Modular)
+### ✅ Development (Önerilen)
 ```bash
 npm run dev
 # → http://localhost:3000
-# Kaynak: src/index.html + modules/
+# HMR aktif, kaynak: src/index.html + modules/
 ```
 
-#### Production (Standalone)
-```
-cbs_katman_yonetim_v3.9.html
-# Tek dosya, tüm özellikler dahili
-# Direkt tarayıcıda açılabilir
+### 📦 Production Build
+```bash
+npm run build
+# → dist/ dizinine optimize edilmiş build
+# Minified, code-split, production-ready
 ```
 
 ## 🏗️ Proje Yapısı
 
 ```
 layerproj/
-├── src/
-│   ├── index.html              # Ana HTML (modular)
+├── 📁 src/                     # Kaynak kod (Development)
+│   ├── index.html              # Ana HTML template
 │   ├── main.js                 # Entry point (1,036 satır)
-│   ├── modules/                # 24 modül (8,654 satır)
+│   ├── modules/                # 24 ES6 modül (8,654 satır)
 │   │   ├── core/               # Config, State, Map
 │   │   ├── utils/              # Validation, Security, Helpers
 │   │   ├── styling/            # Style management
@@ -88,20 +86,30 @@ layerproj/
 │   │   ├── ui/                 # UI components
 │   │   ├── tools/              # Measurement, coordinates
 │   │   └── storage/            # SQLite database
-│   └── styles/                 # CSS dosyaları (69KB)
+│   └── styles/                 # Modular CSS (69KB)
 │
-├── tests/                      # Vitest unit testler
-│   ├── setup.js
-│   ├── core/
-│   └── utils/
+├── 🧪 tests/                   # Test suite
+│   ├── setup.js                # Test environment
+│   ├── core/                   # Core module tests
+│   └── utils/                  # Utility tests
 │
-├── node_modules/               # NPM packages (400+)
-├── dist/                       # Build output (npm run build)
+├── 📦 dist/                    # Production build output
+│   └── (npm run build sonucu)
 │
-├── package.json                # NPM configuration
-├── vite.config.js              # Vite build config
-├── eslint.config.js            # ESLint v9 flat config
-└── .prettierrc.json            # Prettier config
+├── 📦 node_modules/            # NPM dependencies (400+)
+│
+├── ⚙️ Configuration files
+│   ├── package.json            # NPM configuration
+│   ├── vite.config.js          # Vite build config
+│   ├── eslint.config.js        # ESLint v9 flat config
+│   ├── .prettierrc.json        # Code formatting
+│   └── .gitignore              # Git ignore rules
+│
+└── 📖 Documentation
+    ├── README.md               # This file
+    ├── CHANGELOG.md            # Version history
+    ├── DEVELOPMENT.md          # Developer guide
+    └── TROUBLESHOOTING.md      # Common issues
 ```
 
 ## 🚀 Özellikler
