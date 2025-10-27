@@ -426,6 +426,16 @@ export function applyStyle() {
             updateLayerStyleModeIndicator(targetLayerId, currentMode);
         }
 
+        // Force map refresh to show changes immediately
+        if (window.map) {
+            setTimeout(() => {
+                window.map.invalidateSize();
+                if (window.drawnItems && window.drawnItems.redraw) {
+                    window.drawnItems.redraw();
+                }
+            }, 50);
+        }
+
     } catch (error) {
         console.error("Style application error:", error);
         throw error; // Pass error to upper level

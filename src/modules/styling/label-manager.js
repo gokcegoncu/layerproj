@@ -236,6 +236,14 @@ export function applyLabels(layerId) {
     });
 
     console.log(`\n✅ Label operation complete: ${showLabels ? 'APPLIED' : 'REMOVED'} for ${layerFeatures.length} features`);
+
+    // Force map refresh to show changes immediately
+    if (window.map) {
+        setTimeout(() => {
+            window.map.invalidateSize();
+            console.log('🔄 Map refreshed');
+        }, 100);
+    }
 }
 
 /**

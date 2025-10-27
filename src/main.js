@@ -286,6 +286,12 @@ function setupEventListeners() {
             const activeLayerId = window.activeLayerId || AppState.get('activeLayerId');
             if (activeLayerId && activeLayerId !== 'default-layer') {
                 LabelManager.applyLabels(activeLayerId);
+                // Force immediate map refresh
+                if (window.map) {
+                    setTimeout(() => {
+                        window.map.invalidateSize();
+                    }, 100);
+                }
             }
         });
     }
@@ -297,6 +303,12 @@ function setupEventListeners() {
             const showLabels = document.getElementById('showLabels')?.checked;
             if (activeLayerId && activeLayerId !== 'default-layer' && showLabels) {
                 LabelManager.applyLabels(activeLayerId);
+                // Force immediate map refresh
+                if (window.map) {
+                    setTimeout(() => {
+                        window.map.invalidateSize();
+                    }, 100);
+                }
             }
         });
     }
@@ -316,8 +328,15 @@ function setupEventListeners() {
                 styleUpdateTimer = setTimeout(() => {
                     if (StyleManager.applyStyle) {
                         StyleManager.applyStyle();
+                        // Force map refresh
+                        if (window.map) {
+                            window.map.invalidateSize();
+                            if (window.drawnItems) {
+                                window.drawnItems.redraw && window.drawnItems.redraw();
+                            }
+                        }
                     }
-                }, 150); // Wait 150ms after user stops changing
+                }, 50); // Faster response: 50ms instead of 150ms
             });
         }
     });
@@ -333,8 +352,15 @@ function setupEventListeners() {
                 styleUpdateTimer = setTimeout(() => {
                     if (StyleManager.applyStyle) {
                         StyleManager.applyStyle();
+                        // Force map refresh
+                        if (window.map) {
+                            window.map.invalidateSize();
+                            if (window.drawnItems) {
+                                window.drawnItems.redraw && window.drawnItems.redraw();
+                            }
+                        }
                     }
-                }, 150);
+                }, 50);
             });
         }
     });
@@ -350,8 +376,15 @@ function setupEventListeners() {
                 styleUpdateTimer = setTimeout(() => {
                     if (StyleManager.applyStyle) {
                         StyleManager.applyStyle();
+                        // Force map refresh
+                        if (window.map) {
+                            window.map.invalidateSize();
+                            if (window.drawnItems) {
+                                window.drawnItems.redraw && window.drawnItems.redraw();
+                            }
+                        }
                     }
-                }, 150);
+                }, 50);
             });
         }
     });
@@ -369,8 +402,14 @@ function setupEventListeners() {
                     const showLabels = document.getElementById('showLabels')?.checked;
                     if (activeLayerId && activeLayerId !== 'default-layer' && showLabels) {
                         LabelManager.applyLabels(activeLayerId);
+                        // Force map refresh for labels
+                        if (window.map) {
+                            setTimeout(() => {
+                                window.map.invalidateSize();
+                            }, 100);
+                        }
                     }
-                }, 150);
+                }, 50); // Faster response
             });
         }
     });
