@@ -58,7 +58,7 @@ export function applyGraduatedStyle() {
     const breaks = calculateClassBreaks(values, method, numClasses);
 
     // Get color palette
-    let colors = ColorPalettes[rampType][rampName] || ColorPalettes.sequential.Viridis;
+    const colors = ColorPalettes[rampType][rampName] || ColorPalettes.sequential.Viridis;
     const sampledColors = sampleColors(colors, numClasses);
 
     if (invert) {
@@ -332,7 +332,7 @@ export function updateGraduatedPreview() {
     const breaks = calculateClassBreaks(values, method, numClasses);
 
     // Get colors
-    let colors = ColorPalettes[rampType][rampName] || ColorPalettes.sequential.Viridis;
+    const colors = ColorPalettes[rampType][rampName] || ColorPalettes.sequential.Viridis;
     const sampledColors = sampleColors(colors, numClasses);
 
     if (invert) {
